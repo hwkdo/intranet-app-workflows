@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Hwkdo\IntranetAppWorkflows\Actions;
 
 use Hwkdo\IntranetAppWorkflows\Enums\ActionRunStatus;
+use Illuminate\Support\Carbon;
 
 final class ActionResult
 {
@@ -20,9 +21,14 @@ final class ActionResult
         public readonly array $messages = [],
         public readonly array $errors = [],
         public readonly bool $retryable = false,
+        public readonly ?Carbon $waitingUntil = null,
     ) {
-        if (! $status->isTerminal()) {
-            throw new \InvalidArgumentException('ActionResult status must be terminal.');
+        if (! $status->isTerminal() && $status !== ActionRunStatus::Waiting) {
+            throw new \InvalidArgumentException('ActionResult status must be terminal or waiting.');
+        }
+
+        if ($status === ActionRunStatus::Waiting && $waitingUntil === null) {
+            throw new \InvalidArgumentException('Waiting ActionResult requires waitingUntil.');
         }
     }
 
@@ -64,6 +70,25 @@ final class ActionResult
             messages: $messages,
             errors: $errors,
             retryable: true,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $output
+     * @param  list<string>  $messages
+     */
+    public static function waiting(
+        string $message,
+        Carbon $until,
+        array $output = [],
+        array $messages = [],
+    ): self {
+        return new self(
+            status: ActionRunStatus::Waiting,
+            message: $message,
+            output: $output,
+            messages: $messages !== [] ? $messages : [$message],
+            waitingUntil: $until,
         );
     }
 }

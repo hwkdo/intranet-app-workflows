@@ -7,24 +7,35 @@ use Hwkdo\IntranetAppWorkflows\Enums\FlowStatus;
 use Hwkdo\IntranetAppWorkflows\Models\WorkflowFlow;
 use Hwkdo\IntranetAppWorkflows\Services\FlowClaimService;
 use Hwkdo\IntranetAppWorkflows\Support\FlowAccess;
+use Hwkdo\IntranetAppWorkflows\Support\FlowIndexQuery;
+use Hwkdo\IntranetAppWorkflows\Support\FlowTitle;
 use Illuminate\Support\Facades\Auth;
-use function Livewire\Volt\{computed, title};
+use function Livewire\Volt\{computed, state, title};
 
 title('Workflows');
 
-$flows = computed(function () {
-    $user = Auth::user();
+state([
+    'search' => '',
+    'showCompleted' => false,
+    'showAll' => false,
+]);
 
-    return FlowAccess::constrainVisibleTo(
-        WorkflowFlow::query()->with(['type', 'assignee', 'initiator']),
-        $user,
+$canBrowseAll = computed(fn (): bool => FlowAccess::canBrowseAll(Auth::user()));
+
+$flows = computed(function () {
+    $query = WorkflowFlow::query()->with(['type', 'assignee', 'initiator']);
+
+    return FlowIndexQuery::apply(
+        query: $query,
+        user: Auth::user(),
+        showAll: (bool) $this->showAll,
+        showCompleted: (bool) $this->showCompleted,
+        search: (string) $this->search,
     )
         ->latest()
         ->limit(50)
         ->get();
 });
-
-$canStart = computed(fn (): bool => Auth::check() && Auth::user()->can('see-app-workflows'));
 
 $claim = function (int $flowId, FlowClaimService $claims): void {
     $flow = WorkflowFlow::query()->findOrFail($flowId);
@@ -47,19 +58,57 @@ $release = function (int $flowId, FlowClaimService $claims): void {
 <div>
     <x-intranet-app-workflows::workflows-layout heading="Workflows" subheading="Übersicht">
         <div class="space-y-6">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <flux:heading size="lg">Offene und aktuelle Workflows</flux:heading>
-                @if($this->canStart)
-                    <flux:button variant="primary" :href="route('apps.workflows.flows.create')" wire:navigate icon="plus">
-                        Neueinstellung starten
-                    </flux:button>
-                @endif
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <flux:heading size="lg">
+                        @if($this->showCompleted)
+                            Workflows
+                        @else
+                            Offene und aktuelle Workflows
+                        @endif
+                    </flux:heading>
+                </div>
+
+                <div class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end lg:justify-between">
+                    <div class="w-full max-w-md">
+                        <flux:input
+                            wire:model.live.debounce.300ms="search"
+                            label="Suche"
+                            placeholder="Name, Typ, Username…"
+                            icon="magnifying-glass"
+                            clearable
+                        />
+                    </div>
+
+                    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+                        <flux:switch
+                            wire:model.live="showCompleted"
+                            label="Abgeschlossene Workflows anzeigen"
+                        />
+
+                        @if($this->canBrowseAll)
+                            <flux:switch
+                                wire:model.live="showAll"
+                                label="Zeige alle Workflows"
+                                description="Admin-Sicht auf alle Flows"
+                            />
+                        @endif
+                    </div>
+                </div>
             </div>
 
             @if($this->flows->isEmpty())
                 <flux:callout icon="information-circle">
-                    <flux:callout.heading>Noch keine Workflows</flux:callout.heading>
-                    <flux:callout.text>Starte eine Mitarbeiter-Neueinstellung, um den ersten Flow anzulegen.</flux:callout.text>
+                    <flux:callout.heading>Keine Workflows gefunden</flux:callout.heading>
+                    <flux:callout.text>
+                        @if(filled(trim($this->search)) || $this->showCompleted || $this->showAll)
+                            Passe Suche oder Filter an.
+                        @elseif(\Hwkdo\IntranetAppWorkflows\Support\FlowAccess::canCreate(Auth::user()))
+                            Über „Neuer Workflow“ im Menü kannst du den ersten Flow anlegen.
+                        @else
+                            Sobald Workflows für dich sichtbar sind, erscheinen sie hier.
+                        @endif
+                    </flux:callout.text>
                 </flux:callout>
             @else
                 <flux:table>
@@ -75,7 +124,7 @@ $release = function (int $flowId, FlowClaimService $claims): void {
                     <flux:table.rows>
                         @foreach($this->flows as $flow)
                             @php
-                                $name = trim(($flow->getPayloadValue('vorname') ?? '').' '.($flow->getPayloadValue('nachname') ?? ''));
+                                $name = FlowTitle::employeeName($flow);
                             @endphp
                             <flux:table.row wire:key="flow-{{ $flow->id }}">
                                 <flux:table.cell>{{ $flow->id }}</flux:table.cell>

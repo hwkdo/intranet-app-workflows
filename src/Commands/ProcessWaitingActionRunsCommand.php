@@ -11,7 +11,7 @@ class ProcessWaitingActionRunsCommand extends Command
 {
     protected $signature = 'workflows:process-waiting-actions';
 
-    protected $description = 'Führt fällige wartende Workflow-ActionRuns aus (Stichtag erreicht)';
+    protected $description = 'Führt fällige wartende Workflow-ActionRuns aus (Stichtag / Remote-Mailbox-Poll)';
 
     public function handle(WorkflowOrchestrator $orchestrator): int
     {

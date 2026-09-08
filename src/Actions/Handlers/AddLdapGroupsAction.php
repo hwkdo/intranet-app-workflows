@@ -34,12 +34,12 @@ final class AddLdapGroupsAction implements WorkflowActionInterface
         }
 
         if ($dry = PhaseBGuard::assertNotDryRunOrMessage(
-            "LDAP-Gruppen für [{$username}]: ".implode(', ', $groups)
+            'LDAP-Gruppen für ['.$username.']: '.count($groups).' geplant'
         )) {
             return ActionResult::succeeded(
                 message: $dry->message,
                 output: array_merge($dry->output, ['ldap_groups_planned' => $groups]),
-                messages: $dry->messages,
+                messages: array_merge($dry->messages, $groups),
             );
         }
 

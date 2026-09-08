@@ -13,114 +13,123 @@
     $options = $config['options'] ?? [];
 @endphp
 
-<flux:field>
-    <flux:label>{{ $input->label }}@if($required) *@endif</flux:label>
-    @if($input->infotext)
-        <flux:description>{{ $input->infotext }}</flux:description>
-    @endif
+<div wire:key="wf-step-field-{{ $key }}">
+    <flux:field>
+        <flux:label>{{ $input->label }}@if($required) *@endif</flux:label>
+        @if($input->infotext)
+            <flux:description>{{ $input->infotext }}</flux:description>
+        @endif
 
-    @switch($input->typ)
-        @case('textarea')
-            @if($live)
-                <flux:textarea wire:model.live="{{ $model }}" rows="3" />
-            @else
-                <flux:textarea wire:model="{{ $model }}" rows="3" />
-            @endif
-            @break
+        @switch($input->typ)
+            @case('textarea')
+                @if($live)
+                    <flux:textarea wire:model.live="{{ $model }}" wire:key="wf-input-{{ $key }}" rows="3" />
+                @else
+                    <flux:textarea wire:model="{{ $model }}" wire:key="wf-input-{{ $key }}" rows="3" />
+                @endif
+                @break
 
-        @case('date')
-            @if($live)
-                <flux:input type="date" wire:model.live="{{ $model }}" />
-            @else
-                <flux:input type="date" wire:model="{{ $model }}" />
-            @endif
-            @break
+            @case('date')
+                @if($live)
+                    <flux:input type="date" wire:model.live="{{ $model }}" wire:key="wf-input-{{ $key }}" />
+                @else
+                    <flux:input type="date" wire:model="{{ $model }}" wire:key="wf-input-{{ $key }}" />
+                @endif
+                @break
 
-        @case('ja_nein')
-            @if($live)
-                <flux:select wire:model.live="{{ $model }}" placeholder="Bitte wählen…" clearable>
-                    <flux:select.option value="1">Ja</flux:select.option>
-                    <flux:select.option value="0">Nein</flux:select.option>
-                </flux:select>
-            @else
-                <flux:select wire:model="{{ $model }}" placeholder="Bitte wählen…" clearable>
-                    <flux:select.option value="1">Ja</flux:select.option>
-                    <flux:select.option value="0">Nein</flux:select.option>
-                </flux:select>
-            @endif
-            @break
+            @case('ja_nein')
+                @php
+                    $neinLabel = (string) ($config['nein_label'] ?? 'Nein');
+                @endphp
+                @if($live)
+                    <flux:select wire:model.live="{{ $model }}" wire:key="wf-input-{{ $key }}" placeholder="Bitte wählen…">
+                        <flux:select.option value="" disabled>Bitte wählen…</flux:select.option>
+                        <flux:select.option value="1">Ja</flux:select.option>
+                        <flux:select.option value="0">{{ $neinLabel }}</flux:select.option>
+                    </flux:select>
+                @else
+                    <flux:select wire:model="{{ $model }}" wire:key="wf-input-{{ $key }}" placeholder="Bitte wählen…">
+                        <flux:select.option value="" disabled>Bitte wählen…</flux:select.option>
+                        <flux:select.option value="1">Ja</flux:select.option>
+                        <flux:select.option value="0">{{ $neinLabel }}</flux:select.option>
+                    </flux:select>
+                @endif
+                @break
 
-        @case('single_select')
-            @if($live)
-                <flux:select wire:model.live="{{ $model }}" placeholder="Bitte wählen…">
-                    @foreach($options as $option)
-                        <flux:select.option value="{{ $option['value'] }}">{{ $option['label'] }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            @else
-                <flux:select wire:model="{{ $model }}" placeholder="Bitte wählen…">
-                    @foreach($options as $option)
-                        <flux:select.option value="{{ $option['value'] }}">{{ $option['label'] }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            @endif
-            @break
+            @case('single_select')
+                @if($live)
+                    <flux:select wire:model.live="{{ $model }}" wire:key="wf-input-{{ $key }}" placeholder="Bitte wählen…">
+                        <flux:select.option value="" disabled>Bitte wählen…</flux:select.option>
+                        @foreach($options as $option)
+                            <flux:select.option value="{{ $option['value'] }}">{{ $option['label'] }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @else
+                    <flux:select wire:model="{{ $model }}" wire:key="wf-input-{{ $key }}" placeholder="Bitte wählen…">
+                        <flux:select.option value="" disabled>Bitte wählen…</flux:select.option>
+                        @foreach($options as $option)
+                            <flux:select.option value="{{ $option['value'] }}">{{ $option['label'] }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @endif
+                @break
 
-        @case('gvp_select')
-            @if($live)
-                <flux:select wire:model.live="{{ $model }}" placeholder="Abteilung wählen…" variant="listbox" searchable>
-                    @foreach(\App\Models\Gvp::query()->orderBy('name')->get() as $gvp)
-                        <flux:select.option value="{{ $gvp->id }}">{{ $gvp->bezeichnung }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            @else
-                <flux:select wire:model="{{ $model }}" placeholder="Abteilung wählen…" variant="listbox" searchable>
-                    @foreach(\App\Models\Gvp::query()->orderBy('name')->get() as $gvp)
-                        <flux:select.option value="{{ $gvp->id }}">{{ $gvp->bezeichnung }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            @endif
-            @break
+            @case('gvp_select')
+                @if($live)
+                    <flux:select wire:model.live="{{ $model }}" wire:key="wf-input-{{ $key }}" placeholder="Bitte wählen…" variant="listbox" searchable>
+                        @foreach(\App\Models\Gvp::query()->orderBy('name')->get() as $gvp)
+                            <flux:select.option value="{{ $gvp->id }}">{{ $gvp->bezeichnung }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @else
+                    <flux:select wire:model="{{ $model }}" wire:key="wf-input-{{ $key }}" placeholder="Bitte wählen…" variant="listbox" searchable>
+                        @foreach(\App\Models\Gvp::query()->orderBy('name')->get() as $gvp)
+                            <flux:select.option value="{{ $gvp->id }}">{{ $gvp->bezeichnung }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @endif
+                @break
 
-        @case('standort_select')
-            @if($live)
-                <flux:select wire:model.live="{{ $model }}" placeholder="Standort wählen…" variant="listbox" searchable>
-                    @foreach(\App\Models\Standort::query()->orderBy('name')->get() as $standort)
-                        <flux:select.option value="{{ $standort->id }}">{{ $standort->name }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            @else
-                <flux:select wire:model="{{ $model }}" placeholder="Standort wählen…" variant="listbox" searchable>
-                    @foreach(\App\Models\Standort::query()->orderBy('name')->get() as $standort)
-                        <flux:select.option value="{{ $standort->id }}">{{ $standort->name }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            @endif
-            @break
+            @case('standort_select')
+                @if($live)
+                    <flux:select wire:model.live="{{ $model }}" wire:key="wf-input-{{ $key }}" placeholder="Bitte wählen…" variant="listbox" searchable>
+                        @foreach(\App\Models\Standort::query()->orderBy('name')->get() as $standort)
+                            <flux:select.option value="{{ $standort->id }}">{{ $standort->name }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @else
+                    <flux:select wire:model="{{ $model }}" wire:key="wf-input-{{ $key }}" placeholder="Bitte wählen…" variant="listbox" searchable>
+                        @foreach(\App\Models\Standort::query()->orderBy('name')->get() as $standort)
+                            <flux:select.option value="{{ $standort->id }}">{{ $standort->name }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @endif
+                @break
 
-        @case('user_select')
-            @if($live)
-                <flux:select wire:model.live="{{ $model }}" placeholder="Mitarbeiter wählen…" variant="listbox" searchable clearable>
-                    @foreach(\Hwkdo\IntranetAppWorkflows\Support\WorkflowModels::activeUsersForSelect() as $user)
-                        <flux:select.option value="{{ $user->id }}">{{ $user->name }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            @else
-                <flux:select wire:model="{{ $model }}" placeholder="Mitarbeiter wählen…" variant="listbox" searchable clearable>
-                    @foreach(\Hwkdo\IntranetAppWorkflows\Support\WorkflowModels::activeUsersForSelect() as $user)
-                        <flux:select.option value="{{ $user->id }}">{{ $user->name }}</flux:select.option>
-                    @endforeach
-                </flux:select>
-            @endif
-            @break
+            @case('user_select')
+                @if($live)
+                    <flux:select wire:model.live="{{ $model }}" wire:key="wf-input-{{ $key }}" placeholder="Bitte wählen…" variant="listbox" searchable clearable>
+                        @foreach(\Hwkdo\IntranetAppWorkflows\Support\WorkflowModels::activeUsersForSelect() as $user)
+                            <flux:select.option value="{{ $user->id }}">{{ $user->name }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @else
+                    <flux:select wire:model="{{ $model }}" wire:key="wf-input-{{ $key }}" placeholder="Bitte wählen…" variant="listbox" searchable clearable>
+                        @foreach(\Hwkdo\IntranetAppWorkflows\Support\WorkflowModels::activeUsersForSelect() as $user)
+                            <flux:select.option value="{{ $user->id }}">{{ $user->name }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                @endif
+                @break
 
-        @default
-            @if($live)
-                <flux:input wire:model.live="{{ $model }}" />
-            @else
-                <flux:input wire:model="{{ $model }}" />
-            @endif
-    @endswitch
+            @default
+                @if($live)
+                    <flux:input wire:model.live="{{ $model }}" wire:key="wf-input-{{ $key }}" />
+                @else
+                    <flux:input wire:model="{{ $model }}" wire:key="wf-input-{{ $key }}" />
+                @endif
+        @endswitch
 
-    <flux:error name="{{ $wireModel.'.'.$key }}" />
-</flux:field>
+        <flux:error name="{{ $wireModel.'.'.$key }}" />
+    </flux:field>
+</div>

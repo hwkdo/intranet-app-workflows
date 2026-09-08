@@ -7,12 +7,24 @@
 @php
     $defaultNavItems = [
         ['label' => 'Übersicht', 'href' => route('apps.workflows.index'), 'icon' => 'queue-list', 'description' => 'Alle sichtbaren Workflows', 'buttonText' => 'Übersicht öffnen'],
-        ['label' => 'Neueinstellung', 'href' => route('apps.workflows.flows.create'), 'icon' => 'user-plus', 'description' => 'Mitarbeiter-Neueinstellung starten', 'buttonText' => 'Starten'],
+    ];
+
+    if (\Hwkdo\IntranetAppWorkflows\Support\FlowAccess::canCreate(auth()->user())) {
+        $defaultNavItems[] = [
+            'label' => 'Neuer Workflow',
+            'href' => route('apps.workflows.flows.new'),
+            'icon' => 'plus-circle',
+            'description' => 'Neuen Workflow starten',
+            'buttonText' => 'Typ wählen',
+        ];
+    }
+
+    $defaultNavItems = array_merge($defaultNavItems, [
         ['label' => 'Meine Einstellungen', 'href' => route('apps.workflows.settings.user'), 'icon' => 'cog-6-tooth', 'description' => 'Persönliche Einstellungen anpassen', 'buttonText' => 'Einstellungen öffnen'],
         ['label' => 'Bedienungsanleitung', 'href' => route('apps.workflows.manual'), 'icon' => 'book-open', 'description' => 'Ausführliche Anleitung zur App', 'buttonText' => 'Anleitung öffnen'],
         ['label' => 'App-Info', 'href' => route('apps.workflows.info'), 'icon' => 'information-circle', 'description' => 'Installierte Version und Release-Historie', 'buttonText' => 'App-Info anzeigen'],
-        ['label' => 'Admin', 'href' => route('apps.workflows.admin.index'), 'icon' => 'shield-check', 'description' => 'Administrationsbereich verwalten', 'buttonText' => 'Admin öffnen', 'permission' => 'manage-app-workflows']
-    ];
+        ['label' => 'Admin', 'href' => route('apps.workflows.admin.index'), 'icon' => 'shield-check', 'description' => 'Administrationsbereich verwalten', 'buttonText' => 'Admin öffnen', 'permission' => 'manage-app-workflows'],
+    ]);
 
     $navItems = !empty($navItems) ? $navItems : $defaultNavItems;
     $customBgUrl = \Hwkdo\IntranetAppBase\Models\AppBackground::getCustomBackgroundUrl('workflows');

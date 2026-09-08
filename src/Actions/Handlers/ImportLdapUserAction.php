@@ -49,6 +49,9 @@ final class ImportLdapUserAction implements WorkflowActionInterface
 
         $messages = ["LdapUser [{$username}] zu User ID {$user->id} importiert"];
 
+        $user->active = true;
+        $messages[] = "User ID {$user->id}: active gesetzt";
+
         if ($this->isTruthy($context->payloadValue('cms_benoetigt'))) {
             $user->cms_redaktion = true;
             $messages[] = "User ID {$user->id}: cms_redaktion gesetzt";

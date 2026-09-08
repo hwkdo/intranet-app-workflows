@@ -10,19 +10,18 @@ use Illuminate\Database\Eloquent\Builder;
 
 final class FlowAccess
 {
+    /**
+     * Natürliche Bearbeitung (zugewiesener User / Initiator ohne Assignee).
+     * Manager bekommen hier keinen Bypass — UI zeigt sonst sofort das Formular.
+     */
     public static function canEdit(WorkflowFlow $flow, ?Authenticatable $user): bool
     {
         if (! $user || ! self::isOpen($flow)) {
             return false;
         }
 
-        if (self::isManager($user)) {
-            return true;
-        }
-
         $userId = (int) $user->getAuthIdentifier();
 
-        // Nach Claim: nur der zugewiesene User.
         if ($flow->assignee_user_id !== null) {
             return (int) $flow->assignee_user_id === $userId;
         }
@@ -36,13 +35,31 @@ final class FlowAccess
         return (int) $flow->initiator_id === $userId;
     }
 
+    /**
+     * Manager-Notfall: Schritt bearbeiten dürfen, ohne Assignee zu sein.
+     * UI muss explizit aktivieren — nicht automatisch Formular öffnen.
+     */
+    public static function canForceEdit(WorkflowFlow $flow, ?Authenticatable $user): bool
+    {
+        if (! $user || ! self::isOpen($flow) || ! self::isManager($user)) {
+            return false;
+        }
+
+        return ! self::canEdit($flow, $user);
+    }
+
+    public static function canSubmit(WorkflowFlow $flow, ?Authenticatable $user): bool
+    {
+        return self::canEdit($flow, $user) || self::canForceEdit($flow, $user);
+    }
+
     public static function canView(WorkflowFlow $flow, ?Authenticatable $user): bool
     {
         if (! $user) {
             return false;
         }
 
-        if (self::isManager($user)) {
+        if (self::canBrowseAll($user)) {
             return true;
         }
 
@@ -80,6 +97,32 @@ final class FlowAccess
         return AssigneeGroups::userBelongsTo((string) $flow->assignee_group_key, $user);
     }
 
+    /**
+     * Admin-/HR-Übersicht: alle Workflows einsehen dürfen.
+     */
+    public static function canBrowseAll(?Authenticatable $user): bool
+    {
+        if (! $user || ! method_exists($user, 'can')) {
+            return false;
+        }
+
+        return $user->can('all-app-workflows')
+            || $user->can('manage-app-workflows');
+    }
+
+    /**
+     * Workflows starten (Hub + Create-Formulare).
+     */
+    public static function canCreate(?Authenticatable $user): bool
+    {
+        if (! $user || ! method_exists($user, 'can')) {
+            return false;
+        }
+
+        return $user->can('create-app-workflows')
+            || $user->can('manage-app-workflows');
+    }
+
     public static function canRelease(WorkflowFlow $flow, ?Authenticatable $user): bool
     {
         if (! $user || ! self::isOpen($flow)) {
@@ -101,13 +144,13 @@ final class FlowAccess
      * @param  Builder<WorkflowFlow>  $query
      * @return Builder<WorkflowFlow>
      */
-    public static function constrainVisibleTo(Builder $query, ?Authenticatable $user): Builder
+    public static function constrainVisibleTo(Builder $query, ?Authenticatable $user, bool $showAll = false): Builder
     {
         if (! $user) {
             return $query->whereRaw('1 = 0');
         }
 
-        if (self::isManager($user)) {
+        if ($showAll && self::canBrowseAll($user)) {
             return $query;
         }
 

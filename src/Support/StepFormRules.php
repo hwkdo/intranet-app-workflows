@@ -18,15 +18,26 @@ final class StepFormRules
     {
         $when = $input->config['visible_when'] ?? null;
 
-        if (! is_array($when) || $when === []) {
-            return true;
+        if (is_array($when) && $when !== []) {
+            foreach ($when as $field => $expected) {
+                $actual = $form[$field] ?? null;
+
+                if ((string) $actual !== (string) $expected) {
+                    return false;
+                }
+            }
         }
 
-        foreach ($when as $field => $expected) {
-            $actual = $form[$field] ?? null;
+        $whenIn = $input->config['visible_when_in'] ?? null;
 
-            if ((string) $actual !== (string) $expected) {
-                return false;
+        if (is_array($whenIn) && $whenIn !== []) {
+            foreach ($whenIn as $field => $expectedValues) {
+                $actual = (string) ($form[$field] ?? '');
+                $expected = array_map(static fn (mixed $v): string => (string) $v, (array) $expectedValues);
+
+                if (! in_array($actual, $expected, true)) {
+                    return false;
+                }
             }
         }
 
@@ -41,7 +52,8 @@ final class StepFormRules
             return $config['default'];
         }
 
-        return $input->typ === 'ja_nein' ? null : '';
+        // Ohne config.default: leer → UI „Bitte wählen…“
+        return '';
     }
 
     /**
@@ -108,8 +120,16 @@ final class StepFormRules
             }
 
             $field = $prefix.'.'.$input->key;
-            $rules[$field] = ['required'];
-            $messages[$field.'.required'] = $input->label.' ist erforderlich.';
+
+            // „0“ (Nein) darf nicht an Laravel required scheitern → in:0,1
+            if ($input->typ === 'ja_nein') {
+                $rules[$field] = ['present', 'in:0,1'];
+                $messages[$field.'.present'] = $input->label.' ist erforderlich.';
+                $messages[$field.'.in'] = $input->label.' ist erforderlich – bitte Ja oder Nein wählen.';
+            } else {
+                $rules[$field] = ['required'];
+                $messages[$field.'.required'] = $input->label.' ist erforderlich.';
+            }
         }
 
         return [$rules, $messages];
@@ -129,7 +149,8 @@ final class StepFormRules
                 continue;
             }
 
-            $form[$input->key] = self::defaultValue($input);
+            $hidden = $input->config['hidden_value'] ?? null;
+            $form[$input->key] = $hidden !== null ? $hidden : self::defaultValue($input);
         }
 
         return $form;
@@ -153,6 +174,18 @@ final class StepFormRules
             }
 
             foreach (array_keys($when) as $field) {
+                $keys[] = (string) $field;
+            }
+        }
+
+        foreach ($inputs as $input) {
+            $whenIn = $input->config['visible_when_in'] ?? null;
+
+            if (! is_array($whenIn)) {
+                continue;
+            }
+
+            foreach (array_keys($whenIn) as $field) {
                 $keys[] = (string) $field;
             }
         }

@@ -127,7 +127,7 @@ return new class extends Migration
             $table->unsignedInteger('position');
             $table->json('output')->nullable();
             $table->timestamp('waiting_until')->nullable();
-            $table->string('latest_message')->nullable();
+            $table->text('latest_message')->nullable();
             $table->timestamp('started_at')->nullable();
             $table->timestamp('finished_at')->nullable();
             $table->timestamps();

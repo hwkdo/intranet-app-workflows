@@ -5,24 +5,36 @@ declare(strict_types=1);
 use Flux\Flux;
 use Hwkdo\IntranetAppWorkflows\Models\WorkflowType;
 use Hwkdo\IntranetAppWorkflows\Services\WorkflowOrchestrator;
+use Hwkdo\IntranetAppWorkflows\Support\FlowAccess;
 use Hwkdo\IntranetAppWorkflows\Support\StepFormRules;
 use Illuminate\Support\Facades\Auth;
 use function Livewire\Volt\{computed, mount, state, title};
 
-title('Neueinstellung starten');
-
 state([
+    'typeKey' => 'ma_neu',
     'typeId' => null,
     /** @var array<string, mixed> */
     'form' => [],
 ]);
 
-mount(function (): void {
-    $type = WorkflowType::query()->where('key', 'ma_neu')->where('is_active', true)->firstOrFail();
+mount(function (?string $typeKey = null): void {
+    abort_unless(FlowAccess::canCreate(Auth::user()), 403);
+
+    $typeKey = filled($typeKey) ? $typeKey : 'ma_neu';
+    abort_unless(in_array($typeKey, ['ma_neu', 'ma_umsetzung', 'ma_austritt'], true), 404);
+
+    $type = WorkflowType::query()->where('key', $typeKey)->where('is_active', true)->firstOrFail();
+    $this->typeKey = $typeKey;
     $this->typeId = $type->id;
 
     $step = $type->steps()->with('inputs')->orderBy('position')->firstOrFail();
     $this->form = StepFormRules::initialForm($step->inputs);
+});
+
+title(fn (): string => match ($this->typeKey) {
+    'ma_umsetzung' => 'Umsetzung starten',
+    'ma_austritt' => 'Austritt starten',
+    default => 'Neueinstellung starten',
 });
 
 $type = computed(fn () => WorkflowType::query()->with(['steps.inputs'])->findOrFail($this->typeId));
@@ -30,6 +42,18 @@ $type = computed(fn () => WorkflowType::query()->with(['steps.inputs'])->findOrF
 $step = computed(fn () => $this->type->steps->sortBy('position')->first());
 
 $liveFieldKeys = computed(fn (): array => StepFormRules::liveDependencyKeys($this->step->inputs));
+
+$pageHeading = computed(fn (): string => match ($this->typeKey) {
+    'ma_umsetzung' => 'Umsetzung',
+    'ma_austritt' => 'Austritt',
+    default => 'Neueinstellung',
+});
+
+$startCalloutText = computed(fn (): string => match ($this->typeKey) {
+    'ma_austritt' => 'Nach dem Start geht der nächste Schritt an den Vorgesetzten des ausgewählten Mitarbeiters. Am Stichtag (Austrittsdatum + 1 Tag) laufen die IT-Automationen.',
+    'ma_umsetzung' => 'Nach dem Start geht der nächste Schritt an den GVP-Vorgesetzten der gewählten Abteilung. Als Initiator kannst du den Status verfolgen, aber den Folge-Schritt nicht selbst bearbeiten.',
+    default => 'Nach dem Start geht der nächste Schritt an den GVP-Vorgesetzten der gewählten Abteilung. Als Initiator kannst du den Status verfolgen, aber den Folge-Schritt nicht selbst bearbeiten.',
+});
 
 $start = function (WorkflowOrchestrator $orchestrator): void {
     $step = $this->step;
@@ -56,13 +80,12 @@ $start = function (WorkflowOrchestrator $orchestrator): void {
 ?>
 
 <div>
-    <x-intranet-app-workflows::workflows-layout heading="Neueinstellung" subheading="Schritt 1 – HR">
+    <x-intranet-app-workflows::workflows-layout :heading="$this->pageHeading" subheading="Schritt 1 – HR">
         <form wire:submit="start" class="mx-auto max-w-2xl space-y-6">
             <flux:callout icon="information-circle">
-                <flux:callout.heading>Phase A</flux:callout.heading>
+                <flux:callout.heading>Schritt 1 – HR</flux:callout.heading>
                 <flux:callout.text>
-                    Fachliche Aktionen (AD, Tickets, …) sind noch Platzhalter. Du kannst den Flow aber end-to-end durchklicken;
-                    der Assignee fällt auf dich als Initiator zurück.
+                    {{ $this->startCalloutText }}
                 </flux:callout.text>
             </flux:callout>
 
@@ -71,10 +94,12 @@ $start = function (WorkflowOrchestrator $orchestrator): void {
             <div class="space-y-4">
                 @foreach($this->step->inputs as $input)
                     @continue(! StepFormRules::isVisible($input, $this->form))
-                    <x-intranet-app-workflows::step-field
-                        :input="$input"
-                        :live="in_array($input->key, $this->liveFieldKeys, true)"
-                    />
+                    <div wire:key="create-input-{{ $input->key }}">
+                        <x-intranet-app-workflows::step-field
+                            :input="$input"
+                            :live="in_array($input->key, $this->liveFieldKeys, true)"
+                        />
+                    </div>
                 @endforeach
             </div>
 

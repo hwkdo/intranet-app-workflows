@@ -74,6 +74,7 @@ final class ActivateAdUserAction implements WorkflowActionInterface
 
     private function generatePassword(): string
     {
-        return strtoupper(fake()->word()).'-Kammer'.now()->year;
+        // AD-Komplexität: Groß/Klein/Ziffer/Sonderzeichen
+        return 'HwK-'.fake()->lexify('????').'-'.now()->format('y').'!'.fake()->numerify('##');
     }
 }

@@ -229,8 +229,8 @@ class WorkflowOrchestrator
             $this->executeRun($run->fresh(['flow', 'stepAction.action']), ignoreDueDate: false);
             $run->refresh();
 
-            // Sequential: wait blocks later actions of the same step.
-            if ($run->status === ActionRunStatus::Waiting) {
+            // Due-date-Waiting blockiert spätere Actions; Handler-Waiting (z. B. x500-Poll) nicht.
+            if ($run->status === ActionRunStatus::Waiting && $this->isDueDateWaiting($run)) {
                 break;
             }
         }
@@ -257,14 +257,18 @@ class WorkflowOrchestrator
             ->get();
 
         foreach ($laterRuns as $run) {
-            if ($run->status === ActionRunStatus::Waiting) {
+            if ($run->status === ActionRunStatus::Waiting && $this->isDueDateWaiting($run)) {
                 break;
+            }
+
+            if ($run->status === ActionRunStatus::Waiting) {
+                continue;
             }
 
             $this->executeRun($run->fresh(['flow', 'stepAction.action']), ignoreDueDate: false);
             $run->refresh();
 
-            if ($run->status === ActionRunStatus::Waiting) {
+            if ($run->status === ActionRunStatus::Waiting && $this->isDueDateWaiting($run)) {
                 break;
             }
         }
@@ -380,12 +384,30 @@ class WorkflowOrchestrator
             $run->output = array_merge($run->output ?? [], $result->output);
         }
 
+        if ($result->status === ActionRunStatus::Waiting) {
+            $run->forceFill([
+                'status' => ActionRunStatus::Waiting,
+                'latest_message' => $result->message,
+                'finished_at' => null,
+                'waiting_until' => $result->waitingUntil,
+            ])->save();
+
+            return;
+        }
+
         $run->forceFill([
             'status' => $result->status,
             'latest_message' => $result->message,
             'finished_at' => now(),
             'waiting_until' => null,
         ])->save();
+    }
+
+    private function isDueDateWaiting(WorkflowActionRun $run): bool
+    {
+        $run->loadMissing('stepAction');
+
+        return (bool) ($run->stepAction?->wait_for_due_date);
     }
 
     private function finalizeRun(WorkflowActionRun $run, ActionResult $result): void
@@ -443,6 +465,15 @@ class WorkflowOrchestrator
      */
     private function resolveDueDateFromPayload(array $payload): ?string
     {
+        $austritt = $payload['austrittsdatum'] ?? null;
+        if (is_string($austritt) && $austritt !== '') {
+            try {
+                return Carbon::parse($austritt)->addDay()->toDateString();
+            } catch (Throwable) {
+                return null;
+            }
+        }
+
         $raw = $payload['einsatzab'] ?? $payload['due_date'] ?? null;
         if (! is_string($raw) || $raw === '') {
             return null;

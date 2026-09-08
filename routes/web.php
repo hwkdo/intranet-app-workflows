@@ -5,7 +5,10 @@ use Livewire\Volt\Volt;
 
 Route::middleware(['web', 'auth', 'can:see-app-workflows'])->group(function () {
     Volt::route('apps/workflows', 'apps.workflows.index')->name('apps.workflows.index');
-    Volt::route('apps/workflows/flows/create', 'apps.workflows.flows.create')->name('apps.workflows.flows.create');
+    Volt::route('apps/workflows/flows/new', 'apps.workflows.flows.new')->name('apps.workflows.flows.new');
+    Volt::route('apps/workflows/flows/create/{typeKey?}', 'apps.workflows.flows.create')
+        ->name('apps.workflows.flows.create')
+        ->where('typeKey', 'ma_neu|ma_umsetzung|ma_austritt');
     Volt::route('apps/workflows/flows/{flow}', 'apps.workflows.flows.show')->name('apps.workflows.flows.show');
     Volt::route('apps/workflows/example', 'apps.workflows.example')->name('apps.workflows.example');
     Volt::route('apps/workflows/settings/user', 'apps.workflows.settings.user')->name('apps.workflows.settings.user');
