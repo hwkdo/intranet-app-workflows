@@ -11,7 +11,6 @@ Route::middleware(['web', 'auth', 'can:see-app-workflows'])->group(function () {
         ->where('typeKey', 'ma_neu|ma_umsetzung|ma_austritt');
     Volt::route('apps/workflows/flows/{flow}', 'apps.workflows.flows.show')->name('apps.workflows.flows.show');
     Volt::route('apps/workflows/example', 'apps.workflows.example')->name('apps.workflows.example');
-    Volt::route('apps/workflows/settings/user', 'apps.workflows.settings.user')->name('apps.workflows.settings.user');
     Volt::route('apps/workflows/info', 'apps.workflows.info')->name('apps.workflows.info');
     Volt::route('apps/workflows/manual', 'apps.workflows.manual')->name('apps.workflows.manual');
 });

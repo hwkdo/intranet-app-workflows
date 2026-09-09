@@ -20,8 +20,6 @@
     }
 
     $defaultNavItems = array_merge($defaultNavItems, [
-        ['label' => 'Meine Einstellungen', 'href' => route('apps.workflows.settings.user'), 'icon' => 'cog-6-tooth', 'description' => 'Persönliche Einstellungen anpassen', 'buttonText' => 'Einstellungen öffnen'],
-        ['label' => 'Bedienungsanleitung', 'href' => route('apps.workflows.manual'), 'icon' => 'book-open', 'description' => 'Ausführliche Anleitung zur App', 'buttonText' => 'Anleitung öffnen'],
         ['label' => 'App-Info', 'href' => route('apps.workflows.info'), 'icon' => 'information-circle', 'description' => 'Installierte Version und Release-Historie', 'buttonText' => 'App-Info anzeigen'],
         ['label' => 'Admin', 'href' => route('apps.workflows.admin.index'), 'icon' => 'shield-check', 'description' => 'Administrationsbereich verwalten', 'buttonText' => 'Admin öffnen', 'permission' => 'manage-app-workflows'],
     ]);
