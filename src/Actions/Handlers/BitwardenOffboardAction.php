@@ -35,7 +35,7 @@ final class BitwardenOffboardAction implements WorkflowActionInterface
         }
 
         if ($dry = PhaseCGuard::assertNotDryRunOrMessage(
-            actionLabel: "Bitwarden-Offboard für [{$email}]",
+            actionLabel: "Bitwarden-Konto löschen für [{$email}]",
             output: ['bitwarden_offboard_email' => $email],
         )) {
             return $dry;
@@ -43,16 +43,16 @@ final class BitwardenOffboardAction implements WorkflowActionInterface
 
         try {
             if (! $this->bitwarden->offboardByEmail($email)) {
-                return ActionResult::failed("Bitwarden-Offboard für [{$email}] fehlgeschlagen");
+                return ActionResult::failed("Bitwarden-Konto löschen für [{$email}] fehlgeschlagen");
             }
         } catch (Throwable $e) {
             report($e);
 
-            return ActionResult::failed('Bitwarden-Offboard fehlgeschlagen: '.$e->getMessage());
+            return ActionResult::failed('Bitwarden-Konto löschen fehlgeschlagen: '.$e->getMessage());
         }
 
         return ActionResult::succeeded(
-            message: "Bitwarden-Offboard für [{$email}] erledigt",
+            message: "Bitwarden-Konto für [{$email}] gelöscht",
             output: [
                 'bitwarden_offboarded' => true,
                 'bitwarden_offboard_email' => $email,

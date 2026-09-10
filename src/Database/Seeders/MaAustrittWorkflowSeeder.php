@@ -99,7 +99,7 @@ final class MaAustrittWorkflowSeeder
                     ['key' => 'ma_austritt.move_to_austritt_ou', 'title' => 'OU Austritt', 'handler' => 'ma_austritt.move_to_austritt_ou', 'wait_for_due_date' => true],
                     ['key' => 'ma_austritt.clear_phone_fax', 'title' => 'Telefon/Fax leeren', 'handler' => 'ma_austritt.clear_phone_fax', 'wait_for_due_date' => true],
                     ['key' => 'ma_austritt.deactivate_ad_user', 'title' => 'AD deaktivieren', 'handler' => 'ma_austritt.deactivate_ad_user', 'wait_for_due_date' => true],
-                    ['key' => 'ma_austritt.bitwarden_offboard', 'title' => 'Bitwarden Offboard', 'handler' => 'ma_austritt.bitwarden_offboard', 'wait_for_due_date' => true],
+                    ['key' => 'ma_austritt.bitwarden_offboard', 'title' => 'Bitwarden-Konto löschen', 'handler' => 'ma_austritt.bitwarden_offboard', 'wait_for_due_date' => true],
                     ['key' => 'ma_austritt.cisco_offboard', 'title' => 'Cisco Offboard', 'handler' => 'ma_austritt.cisco_offboard', 'wait_for_due_date' => true],
                     ['key' => 'ma_umsetzung.remove_pickup_group', 'title' => 'Pickup entfernen', 'handler' => 'ma_umsetzung.remove_pickup_group', 'wait_for_due_date' => true],
                     ['key' => 'ma_neu.initiator_mail', 'title' => 'Mail an Initiator', 'handler' => 'ma_neu.initiator_mail'],

@@ -123,9 +123,12 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(BitwardenOffboardGatewayInterface::class, function (): BitwardenOffboardGatewayInterface {
             if (interface_exists(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class)
-                && $this->app->bound(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class)) {
+                && $this->app->bound(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class)
+                && class_exists(\Hwkdo\BitwardenLaravel\Services\VaultwardenAdminApiService::class)
+                && $this->app->bound(\Hwkdo\BitwardenLaravel\Services\VaultwardenAdminApiService::class)) {
                 return new HostBitwardenOffboardGateway(
                     $this->app->make(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class),
+                    $this->app->make(\Hwkdo\BitwardenLaravel\Services\VaultwardenAdminApiService::class),
                 );
             }
 
