@@ -10,6 +10,7 @@ use Hwkdo\IntranetAppWorkflows\Commands\AzubiRotationProcessCommand;
 use Hwkdo\IntranetAppWorkflows\Commands\DumpLdapUserCommand;
 use Hwkdo\IntranetAppWorkflows\Commands\ProcessWaitingActionRunsCommand;
 use Hwkdo\IntranetAppWorkflows\Contracts\BitwardenOffboardGatewayInterface;
+use Hwkdo\IntranetAppWorkflows\Contracts\BitwardenOnboardGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\BitwardenSendGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\BueRolesGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\CiscoPickupGatewayInterface;
@@ -19,8 +20,10 @@ use Hwkdo\IntranetAppWorkflows\Contracts\ExchangeSharedMailboxGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\LdapIdentityGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\MailboxForwardingGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenOffboardGateway;
+use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenOnboardGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenSendGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\NullBitwardenOffboardGateway;
+use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\NullBitwardenOnboardGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\NullBitwardenSendGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bue\HostBueRolesGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bue\NullBueRolesGateway;
@@ -127,6 +130,17 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
             }
 
             return new NullBitwardenOffboardGateway;
+        });
+
+        $this->app->singleton(BitwardenOnboardGatewayInterface::class, function (): BitwardenOnboardGatewayInterface {
+            if (interface_exists(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class)
+                && $this->app->bound(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class)) {
+                return new HostBitwardenOnboardGateway(
+                    $this->app->make(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class),
+                );
+            }
+
+            return new NullBitwardenOnboardGateway;
         });
 
         $this->app->singleton(CiscoPickupGatewayInterface::class, function (): CiscoPickupGatewayInterface {

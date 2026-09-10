@@ -15,6 +15,7 @@ use Hwkdo\IntranetAppWorkflows\Actions\Handlers\ApplyAssetsDispositionsAction;
 use Hwkdo\IntranetAppWorkflows\Actions\Handlers\ApplyBeauftragungenAssignmentsAction;
 use Hwkdo\IntranetAppWorkflows\Actions\Handlers\ApplyCiscoStandortAction;
 use Hwkdo\IntranetAppWorkflows\Actions\Handlers\ApplyDokumenteAssignmentsAction;
+use Hwkdo\IntranetAppWorkflows\Actions\Handlers\BitwardenInviteAction;
 use Hwkdo\IntranetAppWorkflows\Actions\Handlers\BitwardenOffboardAction;
 use Hwkdo\IntranetAppWorkflows\Actions\Handlers\CaptureAustrittMitarbeiterMetaAction;
 use Hwkdo\IntranetAppWorkflows\Actions\Handlers\CaptureAustrittSupervisorMetaAction;
@@ -91,6 +92,7 @@ return [
         EnableRemoteMailboxAction::key() => EnableRemoteMailboxAction::class,
         SetMailboxQuotaAction::key() => SetMailboxQuotaAction::class,
         SendSupervisorPasswordBitwardenAction::key() => SendSupervisorPasswordBitwardenAction::class,
+        BitwardenInviteAction::key() => BitwardenInviteAction::class,
         ImportLdapUserAction::key() => ImportLdapUserAction::class,
         AddIntranetRolesAction::key() => AddIntranetRolesAction::class,
         AddBueRolesAction::key() => AddBueRolesAction::class,

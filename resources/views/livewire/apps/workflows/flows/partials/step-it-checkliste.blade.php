@@ -126,6 +126,26 @@
         </flux:callout>
     @endif
 
+    @if($status['bitwarden_invited'])
+        <flux:callout variant="success" icon="lock-closed">
+            <flux:callout.heading>Bitwarden Org-Invite</flux:callout.heading>
+            <flux:callout.text>
+                Einladung gesendet
+                @if($status['bitwarden_invite_email'] !== '')
+                    ({{ $status['bitwarden_invite_email'] }})
+                @endif
+                – Confirm erfolgt zentral in der Bitwarden-App.
+            </flux:callout.text>
+        </flux:callout>
+    @else
+        <flux:callout icon="lock-closed">
+            <flux:callout.heading>Bitwarden Org-Invite</flux:callout.heading>
+            <flux:callout.text>
+                Am Stichtag (Einsatz ab) wird der User in Bitwarden eingeladen; die Bestätigung läuft automatisch nach Registrierung.
+            </flux:callout.text>
+        </flux:callout>
+    @endif
+
     <div class="space-y-4">
         <flux:heading size="md">Manuelle Checks</flux:heading>
 

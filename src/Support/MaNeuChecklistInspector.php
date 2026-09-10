@@ -22,7 +22,9 @@ use Hwkdo\IntranetAppWorkflows\Models\WorkflowFlow;
  *     phone_display: string,
  *     password: string,
  *     bitwarden_sent: bool,
- *     bitwarden_email: string
+ *     bitwarden_email: string,
+ *     bitwarden_invited: bool,
+ *     bitwarden_invite_email: string
  * }
  */
 final class MaNeuChecklistInspector
@@ -40,6 +42,8 @@ final class MaNeuChecklistInspector
         $password = (string) $flow->getPayloadValue('password', '');
         $bitwardenSent = (bool) $flow->getPayloadValue('supervisor_password_bitwarden_sent', false);
         $bitwardenEmail = trim((string) $flow->getPayloadValue('supervisor_password_email', ''));
+        $bitwardenInvited = (bool) $flow->getPayloadValue('bitwarden_invited', false);
+        $bitwardenInviteEmail = trim((string) $flow->getPayloadValue('bitwarden_invite_email', ''));
 
         $adEnabled = $username !== '' ? $this->ldap->isUserEnabled($username) : null;
         $state = $username !== '' ? $this->ldap->getRemoteMailboxState($username) : null;
@@ -87,6 +91,8 @@ final class MaNeuChecklistInspector
             'password' => $password,
             'bitwarden_sent' => $bitwardenSent,
             'bitwarden_email' => $bitwardenEmail,
+            'bitwarden_invited' => $bitwardenInvited,
+            'bitwarden_invite_email' => $bitwardenInviteEmail,
         ];
     }
 

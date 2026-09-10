@@ -165,6 +165,7 @@ final class MaNeuWorkflowSeeder
                     ['key' => 'ma_neu.onboarding_mail', 'title' => 'Onboarding-Mail', 'handler' => 'ma_neu.onboarding_mail'],
                     ['key' => 'ma_neu.initiator_mail', 'title' => 'Mail an Initiator', 'handler' => 'ma_neu.initiator_mail'],
                     ['key' => 'ma_neu.send_supervisor_password_bitwarden', 'title' => 'Passwort per Bitwarden Send an Vorgesetzten', 'handler' => 'ma_neu.send_supervisor_password_bitwarden'],
+                    ['key' => 'ma_neu.bitwarden_invite', 'title' => 'Bitwarden einladen (Stichtag)', 'handler' => 'ma_neu.bitwarden_invite', 'wait_for_due_date' => true],
                 ],
             ];
 
@@ -197,6 +198,7 @@ final class MaNeuWorkflowSeeder
                         ],
                         [
                             'position' => $pos++,
+                            'wait_for_due_date' => (bool) ($actionMeta['wait_for_due_date'] ?? false),
                             'config_override' => null,
                         ],
                     );
@@ -226,6 +228,7 @@ final class MaNeuWorkflowSeeder
                     ],
                     [
                         'position' => $pos,
+                        'wait_for_due_date' => false,
                         'config_override' => $resolveConfig,
                     ],
                 );
