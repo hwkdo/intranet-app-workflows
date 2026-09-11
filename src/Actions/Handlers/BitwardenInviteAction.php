@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Hwkdo\IntranetAppWorkflows\Actions\Handlers;
 
 use App\Models\Gvp;
+use Hwkdo\IntranetAppBitwarden\Support\BitwardenMemberEligibility;
 use Hwkdo\IntranetAppWorkflows\Actions\ActionContext;
 use Hwkdo\IntranetAppWorkflows\Actions\ActionResult;
 use Hwkdo\IntranetAppWorkflows\Actions\Contracts\WorkflowActionInterface;
@@ -28,6 +29,29 @@ final class BitwardenInviteAction implements WorkflowActionInterface
     {
         if ($early = PhaseCGuard::preflight()) {
             return $early;
+        }
+
+        $skipReason = $this->resolveInviteSkipReason($context);
+        if ($skipReason !== null) {
+            $email = $this->resolveEmail($context);
+            $label = match ($skipReason) {
+                'azubi' => 'Azubi',
+                'praktikant' => 'Praktikant',
+                'excluded' => 'ausgeschlossen',
+                default => $skipReason,
+            };
+
+            return ActionResult::succeeded(
+                message: $email !== ''
+                    ? "Bitwarden-Invite für [{$email}] übersprungen ({$label})"
+                    : "Bitwarden-Invite übersprungen ({$label})",
+                output: [
+                    'bitwarden_invited' => false,
+                    'bitwarden_invite_skipped' => true,
+                    'bitwarden_invite_skip_reason' => $skipReason,
+                    'bitwarden_invite_email' => $email !== '' ? $email : null,
+                ],
+            );
         }
 
         $email = $this->resolveEmail($context);
@@ -85,25 +109,41 @@ final class BitwardenInviteAction implements WorkflowActionInterface
 
     private function resolveEmail(ActionContext $context): string
     {
+        $user = $this->resolveUser($context);
+        $email = trim((string) ($user?->email ?? ''));
+        if ($email !== '') {
+            return $email;
+        }
+
+        return trim((string) $context->payloadValue('mail', ''));
+    }
+
+    private function resolveUser(ActionContext $context): ?object
+    {
         $userId = $context->payloadValue('intranet_user_id');
         if (is_numeric($userId)) {
             $user = WorkflowModels::userQuery()->find((int) $userId);
-            $email = trim((string) ($user?->email ?? ''));
-            if ($email !== '') {
-                return $email;
+            if ($user !== null) {
+                return $user;
             }
         }
 
         $username = trim((string) $context->payloadValue('username', ''));
         if ($username !== '') {
-            $user = WorkflowModels::userQuery()->where('username', $username)->first();
-            $email = trim((string) ($user?->email ?? ''));
-            if ($email !== '') {
-                return $email;
-            }
+            return WorkflowModels::userQuery()->where('username', $username)->first();
         }
 
-        return trim((string) $context->payloadValue('mail', ''));
+        return null;
+    }
+
+    private function resolveGvp(ActionContext $context): ?Gvp
+    {
+        $abteilungId = $context->payloadValue('abteilung');
+        if (! is_numeric($abteilungId) || ! class_exists(Gvp::class)) {
+            return null;
+        }
+
+        return Gvp::query()->find((int) $abteilungId);
     }
 
     /**
@@ -111,12 +151,7 @@ final class BitwardenInviteAction implements WorkflowActionInterface
      */
     private function resolveGvpBitwardenIds(ActionContext $context): array
     {
-        $abteilungId = $context->payloadValue('abteilung');
-        if (! is_numeric($abteilungId) || ! class_exists(Gvp::class)) {
-            return [null, null];
-        }
-
-        $gvp = Gvp::query()->find((int) $abteilungId);
+        $gvp = $this->resolveGvp($context);
         if ($gvp === null) {
             return [null, null];
         }
@@ -125,5 +160,40 @@ final class BitwardenInviteAction implements WorkflowActionInterface
         $collectionId = $gvp->hasBitwardenCollection() ? (string) $gvp->bitwarden_collection_id : null;
 
         return [$groupId, $collectionId];
+    }
+
+    private function resolveInviteSkipReason(ActionContext $context): ?string
+    {
+        if (! class_exists(BitwardenMemberEligibility::class)) {
+            return null;
+        }
+
+        $gvp = $this->resolveGvp($context);
+        if ($gvp === null) {
+            return null;
+        }
+
+        $user = $this->resolveUser($context);
+
+        $probe = (object) [
+            'id' => $user?->id,
+            'azubi' => $user !== null && BitwardenMemberEligibility::isAzubi($user),
+            'praktikant' => $user !== null && BitwardenMemberEligibility::isPraktikant($user),
+        ];
+
+        if ($this->isTruthy($context->payloadValue('istazubi'))) {
+            $probe->azubi = true;
+        }
+
+        if ($this->isTruthy($context->payloadValue('istpraktikant'))) {
+            $probe->praktikant = true;
+        }
+
+        return BitwardenMemberEligibility::inviteSkipReason($probe, $gvp);
+    }
+
+    private function isTruthy(mixed $value): bool
+    {
+        return in_array($value, [true, 1, '1'], true);
     }
 }
