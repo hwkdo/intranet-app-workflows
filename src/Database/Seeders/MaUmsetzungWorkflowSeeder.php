@@ -11,6 +11,7 @@ use Hwkdo\IntranetAppWorkflows\Models\WorkflowStepAction;
 use Hwkdo\IntranetAppWorkflows\Models\WorkflowType;
 use Hwkdo\IntranetAppWorkflows\Support\AssigneeGroups;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * ma_umsetzung: HR → Vorgesetzter → IT-Rechte → Checkliste (+ Stichtag-Actions).
@@ -24,12 +25,11 @@ final class MaUmsetzungWorkflowSeeder
         DB::transaction(function (): void {
             $type = WorkflowType::query()->updateOrCreate(
                 ['key' => 'ma_umsetzung'],
-                [
+                $this->typeAttributes([
                     'title' => 'Mitarbeiter Umsetzung',
                     'description' => 'Versetzung bestehender Mitarbeitender (Rechte ±, Pickup, Stammdaten, Tickets).',
                     'is_active' => true,
-                    'cancel_through_position' => 3,
-                ],
+                ], 3),
             );
 
             $steps = [
@@ -260,6 +260,21 @@ final class MaUmsetzungWorkflowSeeder
                 ],
             );
         });
+    }
+
+    /**
+     * Ältere Seed-Migrationen laufen, bevor die Spalte existiert.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function typeAttributes(array $attributes, int $cancelThroughPosition): array
+    {
+        if (Schema::hasColumn((new WorkflowType)->getTable(), 'cancel_through_position')) {
+            $attributes['cancel_through_position'] = $cancelThroughPosition;
+        }
+
+        return $attributes;
     }
 
     /**

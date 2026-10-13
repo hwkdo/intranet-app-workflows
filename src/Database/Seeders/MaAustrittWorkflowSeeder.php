@@ -11,6 +11,7 @@ use Hwkdo\IntranetAppWorkflows\Models\WorkflowStepAction;
 use Hwkdo\IntranetAppWorkflows\Models\WorkflowType;
 use Hwkdo\IntranetAppWorkflows\Support\AssigneeGroups;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * ma_austritt: HR → Vorgesetzter → IT-Checkliste (+ Stichtag-Actions).
@@ -24,12 +25,11 @@ final class MaAustrittWorkflowSeeder
         DB::transaction(function (): void {
             $type = WorkflowType::query()->updateOrCreate(
                 ['key' => 'ma_austritt'],
-                [
+                $this->typeAttributes([
                     'title' => 'Mitarbeiter Austritt',
                     'description' => 'Offboarding: Shared Mailbox, Weiterleitung, Domain-Übergaben, AD/Intranet deaktivieren.',
                     'is_active' => true,
-                    'cancel_through_position' => 1,
-                ],
+                ], 1),
             );
 
             $steps = [
@@ -175,6 +175,21 @@ final class MaAustrittWorkflowSeeder
                     ->delete();
             }
         });
+    }
+
+    /**
+     * Ältere Seed-Migrationen laufen, bevor die Spalte existiert.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function typeAttributes(array $attributes, int $cancelThroughPosition): array
+    {
+        if (Schema::hasColumn((new WorkflowType)->getTable(), 'cancel_through_position')) {
+            $attributes['cancel_through_position'] = $cancelThroughPosition;
+        }
+
+        return $attributes;
     }
 
     /**

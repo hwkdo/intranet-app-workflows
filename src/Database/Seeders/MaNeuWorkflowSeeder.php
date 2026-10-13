@@ -11,6 +11,7 @@ use Hwkdo\IntranetAppWorkflows\Models\WorkflowStepAction;
 use Hwkdo\IntranetAppWorkflows\Models\WorkflowType;
 use Hwkdo\IntranetAppWorkflows\Support\AssigneeGroups;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * ma_neu Definition: Formulare + Identity (B) + Rechte/Tickets (C) + Abschluss-Mails (D).
@@ -25,12 +26,11 @@ final class MaNeuWorkflowSeeder
         DB::transaction(function (): void {
             $type = WorkflowType::query()->updateOrCreate(
                 ['key' => 'ma_neu'],
-                [
+                $this->typeAttributes([
                     'title' => 'Mitarbeiter Neueinstellung',
                     'description' => 'Onboarding-Workflow für neue Mitarbeitende (Identity, Rechte/Tickets, Abschluss-Mails).',
                     'is_active' => true,
-                    'cancel_through_position' => 2,
-                ],
+                ], 2),
             );
 
             $steps = [
@@ -252,6 +252,21 @@ final class MaNeuWorkflowSeeder
 
             unset($noop);
         });
+    }
+
+    /**
+     * Ältere Seed-Migrationen laufen, bevor die Spalte existiert.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @return array<string, mixed>
+     */
+    private function typeAttributes(array $attributes, int $cancelThroughPosition): array
+    {
+        if (Schema::hasColumn((new WorkflowType)->getTable(), 'cancel_through_position')) {
+            $attributes['cancel_through_position'] = $cancelThroughPosition;
+        }
+
+        return $attributes;
     }
 
     /**
