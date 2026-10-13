@@ -90,7 +90,7 @@ final class MaNeuWorkflowSeeder
                 ]],
                 ['key' => 'laufwerke_analog_zu', 'label' => 'Laufwerke analog zu', 'typ' => 'user_select', 'required' => true],
                 ['key' => 'farbdruck_benoetigt', 'label' => 'Farbdruck benötigt', 'typ' => 'ja_nein', 'required' => true],
-                ['key' => 'cms_benoetigt', 'label' => 'CMS-Account benötigt', 'typ' => 'ja_nein', 'required' => true],
+                ['key' => 'cms_benoetigt', 'label' => 'CMS-Account benötigt', 'typ' => 'ja_nein', 'required' => true, 'infotext' => 'CMS (Content Management System) Account wird benötigt um an der Homepage hwk-do.de arbeiten zu können.'],
                 ['key' => 'bemerkungen', 'label' => 'Bemerkungen', 'typ' => 'textarea', 'required' => false],
             ]);
 

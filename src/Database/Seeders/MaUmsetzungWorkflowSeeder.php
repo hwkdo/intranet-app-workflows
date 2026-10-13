@@ -94,7 +94,7 @@ final class MaUmsetzungWorkflowSeeder
                 ]],
                 ['key' => 'laufwerke_analog_zu', 'label' => 'Laufwerke / Rechte analog zu', 'typ' => 'user_select', 'required' => false],
                 ['key' => 'farbdruck_benoetigt', 'label' => 'Farbdruck benötigt', 'typ' => 'ja_nein', 'required' => true],
-                ['key' => 'cms_benoetigt', 'label' => 'CMS-Account benötigt', 'typ' => 'ja_nein', 'required' => true],
+                ['key' => 'cms_benoetigt', 'label' => 'CMS-Account benötigt', 'typ' => 'ja_nein', 'required' => true, 'infotext' => 'CMS (Content Management System) Account wird benötigt um an der Homepage hwk-do.de arbeiten zu können.'],
                 ['key' => 'anrufuebernahme_benoetigt', 'label' => 'Anrufübernahmegruppe benötigt', 'typ' => 'ja_nein', 'required' => true, 'infotext' => 'Mitarbeiter innerhalb einer Anrufübernahmegruppe können die Anrufe der Kollegen sehen und übernehmen.', 'config' => [
                     'default' => '',
                 ]],
