@@ -710,9 +710,10 @@ $submit = function (WorkflowOrchestrator $orchestrator, MaNeuStep3Planner $plann
         }
     } elseif ($step->key === 'it_checkliste') {
         if ($flow->type?->key === 'ma_neu') {
-            $status = app(MaNeuChecklistInspector::class)->inspect($flow);
-            if ($status['ad_enabled'] !== true) {
-                Flux::toast(variant: 'danger', text: 'AD-User ist nicht aktiviert – bitte prüfen und erneut versuchen.');
+            $inspector = app(MaNeuChecklistInspector::class);
+            $blockers = $inspector->blockingMessages($inspector->inspect($flow));
+            if ($blockers !== []) {
+                Flux::toast(variant: 'danger', text: implode(' ', $blockers));
 
                 return;
             }

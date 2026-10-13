@@ -12,7 +12,10 @@
 
     <div class="space-y-3">
         <div class="flex flex-wrap items-center justify-between gap-2">
-            <flux:heading size="md">Automatische Prüfungen</flux:heading>
+            <div>
+                <flux:heading size="md">Automatische Prüfungen</flux:heading>
+                <flux:text class="text-sm text-zinc-500">AD, Mailbox und Proxy-Adressen müssen erfüllt sein, bevor dieser Schritt abgeschlossen werden kann.</flux:text>
+            </div>
             <flux:button type="button" size="sm" variant="ghost" icon="arrow-path" wire:click="refreshChecklistStatus">
                 Erneut prüfen
             </flux:button>
@@ -41,9 +44,9 @@
                 <flux:callout.text>Cloud-/Remote-Mailbox ist vorhanden (x500 / Exchange-Attribute).</flux:callout.text>
             </flux:callout>
         @else
-            <flux:callout variant="warning" icon="exclamation-triangle">
+            <flux:callout variant="danger" icon="x-circle">
                 <flux:callout.heading>Mailbox</flux:callout.heading>
-                <flux:callout.text>Noch keine Mailbox-Indikatoren in LDAP gefunden.</flux:callout.text>
+                <flux:callout.text>Noch keine Mailbox-Indikatoren in LDAP gefunden. Der Schritt kann so nicht abgeschlossen werden.</flux:callout.text>
             </flux:callout>
         @endif
 
@@ -53,13 +56,13 @@
                 <flux:callout.text>Alle erwarteten Proxy-Adressen sind gesetzt.</flux:callout.text>
             </flux:callout>
         @else
-            <flux:callout variant="warning" icon="exclamation-triangle">
+            <flux:callout variant="danger" icon="x-circle">
                 <flux:callout.heading>Proxy-Adressen</flux:callout.heading>
                 <flux:callout.text>
                     @if($status['missing_proxies'] !== [])
-                        Es fehlen noch Adressen:
+                        Es fehlen noch Adressen. Der Schritt kann so nicht abgeschlossen werden.
                     @else
-                        Erwartete Proxy-Adressen konnten nicht ermittelt werden.
+                        Erwartete Proxy-Adressen konnten nicht ermittelt werden. Der Schritt kann so nicht abgeschlossen werden.
                     @endif
                 </flux:callout.text>
             </flux:callout>

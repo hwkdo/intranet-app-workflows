@@ -96,6 +96,31 @@ final class MaNeuChecklistInspector
         ];
     }
 
+    /**
+     * Harte Voraussetzungen, bevor die Aktionen von Schritt 4 starten dürfen.
+     *
+     * @param  array{ad_enabled: bool|null, has_mailbox: bool, proxy_ok: bool}  $status
+     * @return list<string>
+     */
+    public function blockingMessages(array $status): array
+    {
+        $messages = [];
+
+        if ($status['ad_enabled'] !== true) {
+            $messages[] = 'AD-User ist nicht aktiviert – bitte prüfen und erneut versuchen.';
+        }
+
+        if ($status['has_mailbox'] !== true) {
+            $messages[] = 'Mailbox ist noch nicht vorhanden – bitte prüfen und erneut versuchen.';
+        }
+
+        if ($status['proxy_ok'] !== true) {
+            $messages[] = 'Proxy-Adressen sind unvollständig – bitte prüfen und erneut versuchen.';
+        }
+
+        return $messages;
+    }
+
     public function phoneDisplay(WorkflowFlow $flow): string
     {
         $extension = trim((string) $flow->getPayloadValue('telefon', ''));
