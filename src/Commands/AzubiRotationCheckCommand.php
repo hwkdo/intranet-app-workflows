@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Hwkdo\IntranetAppWorkflows\Commands;
 
 use App\Models\AzubiEinsatz;
+use Hwkdo\IntranetAppWorkflows\Models\IntranetAppWorkflowsSettings;
 use Hwkdo\IntranetAppWorkflows\Services\AzubiRotationStarter;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
@@ -13,12 +14,19 @@ use Throwable;
 class AzubiRotationCheckCommand extends Command
 {
     protected $signature = 'workflows:azubi-rotation-check
-                            {--date= : Bezugstag (Y-m-d), Default heute → Einsätze mit Start = morgen}';
+                            {--date= : Bezugstag (Y-m-d), Default heute → Einsätze mit Start = morgen}
+                            {--force : Auch ausführen, wenn automatische Azubi-Rotationen deaktiviert sind}';
 
     protected $description = 'Startet Azubi-Rotationen für Einsätze, die morgen beginnen';
 
     public function handle(AzubiRotationStarter $starter): int
     {
+        if (! IntranetAppWorkflowsSettings::resolved()->automatische_azubi_rotationen && ! $this->option('force')) {
+            $this->info('Automatische Azubi-Rotationen sind in den App-Einstellungen deaktiviert.');
+
+            return self::SUCCESS;
+        }
+
         $base = $this->option('date')
             ? Carbon::parse((string) $this->option('date'))->startOfDay()
             : now()->startOfDay();

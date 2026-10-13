@@ -22,4 +22,13 @@ class IntranetAppWorkflowsSettings extends Model
     {
         return self::orderBy('version', 'desc')->first();
     }
+
+    public static function resolved(): AppSettings
+    {
+        $settings = self::current()?->settings;
+
+        return $settings instanceof AppSettings
+            ? $settings
+            : new AppSettings;
+    }
 }

@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Hwkdo\IntranetAppWorkflows;
 
+use App\Services\LdapRecordUserService;
+use Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface;
+use Hwkdo\BitwardenLaravel\Services\VaultwardenAdminApiService;
+use Hwkdo\BueLaravel\BueLaravel;
+use Hwkdo\CiscoPhoneServicesLaravel\Interfaces\AxlServiceInterface;
+use Hwkdo\HwkAdminLaravel\HwkAdminService;
 use Hwkdo\IntranetAppWorkflows\Actions\ActionRegistry;
 use Hwkdo\IntranetAppWorkflows\Commands\AzubiRotationCheckCommand;
 use Hwkdo\IntranetAppWorkflows\Commands\AzubiRotationProcessCommand;
@@ -19,6 +25,7 @@ use Hwkdo\IntranetAppWorkflows\Contracts\ExchangeQuotaGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\ExchangeSharedMailboxGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\LdapIdentityGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\MailboxForwardingGatewayInterface;
+use Hwkdo\IntranetAppWorkflows\Models\IntranetAppWorkflowsSettings;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenOffboardGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenOnboardGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenSendGateway;
@@ -74,7 +81,7 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         $this->app->singleton(WorkflowOrchestrator::class);
 
         $this->app->singleton(LdapIdentityGatewayInterface::class, function (): LdapIdentityGatewayInterface {
-            if (class_exists(\App\Services\LdapRecordUserService::class)) {
+            if (class_exists(LdapRecordUserService::class)) {
                 return new HostLdapIdentityGateway;
             }
 
@@ -82,7 +89,7 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(BueRolesGatewayInterface::class, function (): BueRolesGatewayInterface {
-            if (class_exists(\Hwkdo\BueLaravel\BueLaravel::class)) {
+            if (class_exists(BueLaravel::class)) {
                 return new HostBueRolesGateway;
             }
 
@@ -90,7 +97,7 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(BitwardenSendGatewayInterface::class, function (): BitwardenSendGatewayInterface {
-            if (class_exists(\Hwkdo\HwkAdminLaravel\HwkAdminService::class)) {
+            if (class_exists(HwkAdminService::class)) {
                 return new HostBitwardenSendGateway;
             }
 
@@ -98,7 +105,7 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(ExchangeQuotaGatewayInterface::class, function (): ExchangeQuotaGatewayInterface {
-            if (class_exists(\Hwkdo\HwkAdminLaravel\HwkAdminService::class)) {
+            if (class_exists(HwkAdminService::class)) {
                 return new HostExchangeQuotaGateway;
             }
 
@@ -106,7 +113,7 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(ExchangeSharedMailboxGatewayInterface::class, function (): ExchangeSharedMailboxGatewayInterface {
-            if (class_exists(\Hwkdo\HwkAdminLaravel\HwkAdminService::class)) {
+            if (class_exists(HwkAdminService::class)) {
                 return new HostExchangeSharedMailboxGateway;
             }
 
@@ -114,7 +121,7 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(MailboxForwardingGatewayInterface::class, function (): MailboxForwardingGatewayInterface {
-            if (class_exists(\Hwkdo\HwkAdminLaravel\HwkAdminService::class)) {
+            if (class_exists(HwkAdminService::class)) {
                 return new HostMailboxForwardingGateway;
             }
 
@@ -122,13 +129,13 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(BitwardenOffboardGatewayInterface::class, function (): BitwardenOffboardGatewayInterface {
-            if (interface_exists(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class)
-                && $this->app->bound(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class)
-                && class_exists(\Hwkdo\BitwardenLaravel\Services\VaultwardenAdminApiService::class)
-                && $this->app->bound(\Hwkdo\BitwardenLaravel\Services\VaultwardenAdminApiService::class)) {
+            if (interface_exists(BitwardenManagementApiInterface::class)
+                && $this->app->bound(BitwardenManagementApiInterface::class)
+                && class_exists(VaultwardenAdminApiService::class)
+                && $this->app->bound(VaultwardenAdminApiService::class)) {
                 return new HostBitwardenOffboardGateway(
-                    $this->app->make(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class),
-                    $this->app->make(\Hwkdo\BitwardenLaravel\Services\VaultwardenAdminApiService::class),
+                    $this->app->make(BitwardenManagementApiInterface::class),
+                    $this->app->make(VaultwardenAdminApiService::class),
                 );
             }
 
@@ -136,10 +143,10 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(BitwardenOnboardGatewayInterface::class, function (): BitwardenOnboardGatewayInterface {
-            if (interface_exists(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class)
-                && $this->app->bound(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class)) {
+            if (interface_exists(BitwardenManagementApiInterface::class)
+                && $this->app->bound(BitwardenManagementApiInterface::class)) {
                 return new HostBitwardenOnboardGateway(
-                    $this->app->make(\Hwkdo\BitwardenLaravel\Contracts\BitwardenManagementApiInterface::class),
+                    $this->app->make(BitwardenManagementApiInterface::class),
                 );
             }
 
@@ -147,10 +154,10 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(CiscoPickupGatewayInterface::class, function (): CiscoPickupGatewayInterface {
-            if (interface_exists(\Hwkdo\CiscoPhoneServicesLaravel\Interfaces\AxlServiceInterface::class)
-                && $this->app->bound(\Hwkdo\CiscoPhoneServicesLaravel\Interfaces\AxlServiceInterface::class)) {
+            if (interface_exists(AxlServiceInterface::class)
+                && $this->app->bound(AxlServiceInterface::class)) {
                 return new HostCiscoPickupGateway(
-                    $this->app->make(\Hwkdo\CiscoPhoneServicesLaravel\Interfaces\AxlServiceInterface::class),
+                    $this->app->make(AxlServiceInterface::class),
                 );
             }
 
@@ -158,10 +165,10 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(CiscoStandortGatewayInterface::class, function (): CiscoStandortGatewayInterface {
-            if (interface_exists(\Hwkdo\CiscoPhoneServicesLaravel\Interfaces\AxlServiceInterface::class)
-                && $this->app->bound(\Hwkdo\CiscoPhoneServicesLaravel\Interfaces\AxlServiceInterface::class)) {
+            if (interface_exists(AxlServiceInterface::class)
+                && $this->app->bound(AxlServiceInterface::class)) {
                 return new HostCiscoStandortGateway(
-                    $this->app->make(\Hwkdo\CiscoPhoneServicesLaravel\Interfaces\AxlServiceInterface::class),
+                    $this->app->make(AxlServiceInterface::class),
                 );
             }
 
@@ -178,11 +185,14 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        $this->loadJsonTranslationsFrom(__DIR__.'/../lang');
 
         $this->app->resolving(Schedule::class, function (): void {
             $schedule = $this->app->make(Schedule::class);
             $schedule->command('workflows:process-waiting-actions')->everyFifteenMinutes();
-            $schedule->command('workflows:azubi-rotation-check')->dailyAt('01:10');
+            $schedule->command('workflows:azubi-rotation-check')
+                ->dailyAt('01:10')
+                ->when(fn (): bool => IntranetAppWorkflowsSettings::resolved()->automatische_azubi_rotationen);
         });
     }
 }
