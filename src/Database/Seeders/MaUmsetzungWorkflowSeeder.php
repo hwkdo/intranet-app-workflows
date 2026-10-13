@@ -28,6 +28,7 @@ final class MaUmsetzungWorkflowSeeder
                     'title' => 'Mitarbeiter Umsetzung',
                     'description' => 'Versetzung bestehender Mitarbeitender (Rechte ±, Pickup, Stammdaten, Tickets).',
                     'is_active' => true,
+                    'cancel_through_position' => 3,
                 ],
             );
 

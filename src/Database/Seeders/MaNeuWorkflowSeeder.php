@@ -29,6 +29,7 @@ final class MaNeuWorkflowSeeder
                     'title' => 'Mitarbeiter Neueinstellung',
                     'description' => 'Onboarding-Workflow für neue Mitarbeitende (Identity, Rechte/Tickets, Abschluss-Mails).',
                     'is_active' => true,
+                    'cancel_through_position' => 2,
                 ],
             );
 

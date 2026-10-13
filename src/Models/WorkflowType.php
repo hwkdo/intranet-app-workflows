@@ -17,6 +17,7 @@ class WorkflowType extends Model
     {
         return [
             'is_active' => 'boolean',
+            'cancel_through_position' => 'integer',
         ];
     }
 

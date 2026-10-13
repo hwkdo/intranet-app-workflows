@@ -65,6 +65,7 @@ state([
     'austrittBulkDokumenteUserId' => null,
     'austrittBulkAkUserId' => null,
     'austrittBulkBwUserId' => null,
+    'cancelRemark' => '',
 ]);
 
 $resetFormFromCurrentStep = function (MaNeuStep3Planner $planner, MaUmsetzungRechtePlanner $rechtePlanner): void {
@@ -780,6 +781,26 @@ $canClaim = computed(fn (): bool => FlowAccess::canClaim($this->flow, Auth::user
 
 $canRelease = computed(fn (): bool => FlowAccess::canRelease($this->flow, Auth::user()));
 
+$canCancel = computed(fn (): bool => FlowAccess::canCancel($this->flow, Auth::user()));
+
+$cancel = function (WorkflowOrchestrator $orchestrator): void {
+    $flow = $this->flow;
+    abort_unless(FlowAccess::canCancel($flow, Auth::user()), 403);
+
+    $remark = trim((string) $this->cancelRemark);
+
+    if ($remark !== '') {
+        $this->validate([
+            'cancelRemark' => ['string', 'max:2000'],
+        ]);
+    }
+
+    $orchestrator->cancel($flow, (int) Auth::id(), $remark !== '' ? $remark : null);
+    $this->cancelRemark = '';
+    Flux::modals()->close();
+    Flux::toast(variant: 'success', text: 'Workflow abgebrochen.');
+};
+
 $statusColor = function (ActionRunStatus $status): string {
     return match ($status) {
         ActionRunStatus::Succeeded, ActionRunStatus::Skipped => 'green',
@@ -802,8 +823,9 @@ $statusColor = function (ActionRunStatus $status): string {
                         <flux:badge :color="match($this->flow->status) {
                             FlowStatus::Active => 'blue',
                             FlowStatus::Completed => 'green',
-                            default => 'zinc',
-                        }">{{ $this->flow->status->value }}</flux:badge>
+                            FlowStatus::Cancelled => 'zinc',
+                            default => 'amber',
+                        }">{{ $this->flow->status->label() }}</flux:badge>
                         @if($this->flow->due_date)
                             <flux:badge color="zinc">Stichtag {{ $this->flow->due_date->format('d.m.Y') }}</flux:badge>
                         @endif
@@ -814,6 +836,11 @@ $statusColor = function (ActionRunStatus $status): string {
                     </flux:text>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
+                    @if($this->canCancel)
+                        <flux:modal.trigger name="cancel-workflow">
+                            <flux:button variant="danger" icon="x-circle">Workflow abbrechen</flux:button>
+                        </flux:modal.trigger>
+                    @endif
                     @if($this->canClaim)
                         <flux:button variant="primary" wire:click="claim" icon="hand-raised">Mir zuweisen</flux:button>
                     @endif
@@ -833,6 +860,31 @@ $statusColor = function (ActionRunStatus $status): string {
                     <flux:button :href="route('apps.workflows.index')" wire:navigate variant="ghost" icon="arrow-left">Zur Liste</flux:button>
                 </div>
             </div>
+
+            <flux:modal name="cancel-workflow" class="md:w-96">
+                <form wire:submit="cancel" class="space-y-6">
+                    <div>
+                        <flux:heading size="lg">Workflow abbrechen?</flux:heading>
+                        <flux:text class="mt-2">
+                            Der Workflow wird beendet. Offene Schritte und wartende Aktionen laufen danach nicht mehr.
+                        </flux:text>
+                    </div>
+
+                    <flux:field>
+                        <flux:label>Bemerkung</flux:label>
+                        <flux:textarea wire:model="cancelRemark" rows="3" placeholder="Optional" />
+                        <flux:error name="cancelRemark" />
+                    </flux:field>
+
+                    <div class="flex gap-2">
+                        <flux:spacer />
+                        <flux:modal.close>
+                            <flux:button type="button" variant="ghost">Zurück</flux:button>
+                        </flux:modal.close>
+                        <flux:button type="submit" variant="danger" icon="x-circle">Abbrechen</flux:button>
+                    </div>
+                </form>
+            </flux:modal>
 
             @if($this->flow->error_summary)
                 <flux:callout variant="danger" icon="exclamation-triangle">
@@ -881,7 +933,12 @@ $statusColor = function (ActionRunStatus $status): string {
                 @endforeach
             </div>
 
-            @if($this->isCompleted)
+            @if($this->flow->status === FlowStatus::Cancelled)
+                <flux:callout icon="x-circle" variant="warning">
+                    <flux:callout.heading>Workflow abgebrochen</flux:callout.heading>
+                    <flux:callout.text>Der Workflow wurde abgebrochen. Offene Schritte und wartende Aktionen laufen nicht mehr.</flux:callout.text>
+                </flux:callout>
+            @elseif($this->isCompleted)
                 <flux:callout icon="check-circle" variant="success">
                     <flux:callout.heading>Workflow abgeschlossen</flux:callout.heading>
                     <flux:callout.text>Alle Schritte sind durchlaufen. Der Workflow ist abgeschlossen.</flux:callout.text>

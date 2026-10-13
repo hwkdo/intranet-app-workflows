@@ -15,4 +15,12 @@ enum FlowStatus: string
     {
         return $this === self::Draft || $this === self::Active;
     }
+
+    public function label(): string
+    {
+        return match ($this) {
+            self::Cancelled => 'abgebrochen',
+            default => $this->value,
+        };
+    }
 }

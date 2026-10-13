@@ -28,6 +28,7 @@ final class MaAustrittWorkflowSeeder
                     'title' => 'Mitarbeiter Austritt',
                     'description' => 'Offboarding: Shared Mailbox, Weiterleitung, Domain-Übergaben, AD/Intranet deaktivieren.',
                     'is_active' => true,
+                    'cancel_through_position' => 1,
                 ],
             );
 

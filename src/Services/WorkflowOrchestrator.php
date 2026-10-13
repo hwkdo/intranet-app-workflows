@@ -143,9 +143,71 @@ class WorkflowOrchestrator
         });
     }
 
+    /**
+     * @throws \RuntimeException
+     */
+    public function cancel(WorkflowFlow $flow, int $userId, ?string $remark = null): WorkflowFlow
+    {
+        return DB::transaction(function () use ($flow, $userId, $remark): WorkflowFlow {
+            $flow->refresh();
+            $flow->loadMissing('type');
+
+            if (! $flow->status->isOpen()) {
+                throw new \RuntimeException('Flow is not open for cancellation.');
+            }
+
+            $limit = $flow->type?->cancel_through_position;
+
+            if ($limit === null || (int) $flow->current_step_position > ($limit + 1)) {
+                throw new \RuntimeException('Flow cannot be cancelled at the current step.');
+            }
+
+            $step = $flow->currentStep();
+            $remark = filled($remark) ? trim($remark) : null;
+
+            $flow->forceFill([
+                'status' => FlowStatus::Cancelled,
+                'finished_at' => now(),
+                'assignee_user_id' => null,
+                'assignee_group_key' => null,
+            ])->save();
+
+            WorkflowActionRun::query()
+                ->where('flow_id', $flow->id)
+                ->whereNotIn('status', [
+                    ActionRunStatus::Succeeded->value,
+                    ActionRunStatus::Failed->value,
+                    ActionRunStatus::Skipped->value,
+                    ActionRunStatus::Partial->value,
+                ])
+                ->update([
+                    'status' => ActionRunStatus::Skipped->value,
+                    'waiting_until' => null,
+                    'finished_at' => now(),
+                    'latest_message' => 'Workflow abgebrochen',
+                    'updated_at' => now(),
+                ]);
+
+            WorkflowHistory::query()->create([
+                'flow_id' => $flow->id,
+                'step_id' => $step?->id,
+                'user_id' => $userId,
+                'what' => HistoryWhat::Cancelled,
+                'bemerkung' => $remark,
+                'data' => $remark !== null ? ['bemerkung' => $remark] : null,
+            ]);
+
+            return $flow->fresh(['type.steps', 'actionRuns', 'histories']);
+        });
+    }
+
     public function retryActionRun(WorkflowActionRun $run, bool $ignoreDueDate = false): WorkflowActionRun
     {
         $run->loadMissing(['flow', 'stepAction.action']);
+
+        if (! $run->flow->status->isOpen()) {
+            throw new \RuntimeException('Cannot retry an action of a closed workflow.');
+        }
 
         if ($run->status === ActionRunStatus::Succeeded || $run->status === ActionRunStatus::Skipped) {
             throw new \RuntimeException('Cannot retry a successful or skipped action run.');
@@ -178,6 +240,17 @@ class WorkflowOrchestrator
             ->get();
 
         foreach ($runs as $run) {
+            if (! $run->flow->status->isOpen()) {
+                $run->forceFill([
+                    'status' => ActionRunStatus::Skipped,
+                    'waiting_until' => null,
+                    'finished_at' => now(),
+                    'latest_message' => 'Workflow abgebrochen',
+                ])->save();
+
+                continue;
+            }
+
             $run->forceFill([
                 'status' => ActionRunStatus::Pending,
                 'waiting_until' => null,

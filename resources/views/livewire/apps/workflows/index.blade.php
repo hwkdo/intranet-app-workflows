@@ -135,7 +135,7 @@ $release = function (int $flowId, FlowClaimService $claims): void {
                                         FlowStatus::Completed => 'green',
                                         FlowStatus::Cancelled => 'zinc',
                                         default => 'amber',
-                                    }">{{ $flow->status->value }}</flux:badge>
+                                    }">{{ $flow->status->label() }}</flux:badge>
                                 </flux:table.cell>
                                 <flux:table.cell>{{ $flow->current_step_position }}</flux:table.cell>
                                 <flux:table.cell>{{ $name !== '' ? $name : '—' }}</flux:table.cell>

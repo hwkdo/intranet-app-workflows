@@ -123,6 +123,33 @@ final class FlowAccess
             || $user->can('manage-app-workflows');
     }
 
+    /**
+     * Abbrechen bis einschließlich Schritt N: der Folgeschritt darf noch nicht abgeschlossen sein.
+     */
+    public static function canCancel(WorkflowFlow $flow, ?Authenticatable $user): bool
+    {
+        if (! $user || ! self::isOpen($flow)) {
+            return false;
+        }
+
+        $flow->loadMissing('type');
+        $limit = $flow->type?->cancel_through_position;
+
+        if ($limit === null) {
+            return false;
+        }
+
+        if ((int) $flow->current_step_position > ($limit + 1)) {
+            return false;
+        }
+
+        if (self::isManager($user)) {
+            return true;
+        }
+
+        return (int) $flow->initiator_id === (int) $user->getAuthIdentifier();
+    }
+
     public static function canRelease(WorkflowFlow $flow, ?Authenticatable $user): bool
     {
         if (! $user || ! self::isOpen($flow)) {
