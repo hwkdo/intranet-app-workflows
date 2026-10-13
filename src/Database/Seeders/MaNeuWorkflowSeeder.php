@@ -87,7 +87,7 @@ final class MaNeuWorkflowSeeder
                     'visible_when' => ['bue_rechte_benoetigt' => '1'],
                     'required_when_visible' => true,
                 ]],
-                ['key' => 'laufwerke_analog_zu', 'label' => 'Laufwerke analog zu', 'typ' => 'user_select', 'required' => false],
+                ['key' => 'laufwerke_analog_zu', 'label' => 'Laufwerke analog zu', 'typ' => 'user_select', 'required' => true],
                 ['key' => 'farbdruck_benoetigt', 'label' => 'Farbdruck benötigt', 'typ' => 'ja_nein', 'required' => true],
                 ['key' => 'cms_benoetigt', 'label' => 'CMS-Account benötigt', 'typ' => 'ja_nein', 'required' => true],
                 ['key' => 'bemerkungen', 'label' => 'Bemerkungen', 'typ' => 'textarea', 'required' => false],
