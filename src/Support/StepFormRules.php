@@ -121,10 +121,10 @@ final class StepFormRules
 
             $field = $prefix.'.'.$input->key;
 
-            // „0“ (Nein) darf nicht an Laravel required scheitern → in:0,1
+            // Leeres „Bitte wählen…“ ist "". required lehnt das ab; "0" (Nein) bleibt gültig.
             if ($input->typ === 'ja_nein') {
-                $rules[$field] = ['present', 'in:0,1'];
-                $messages[$field.'.present'] = $input->label.' ist erforderlich.';
+                $rules[$field] = ['required', 'in:0,1'];
+                $messages[$field.'.required'] = $input->label.' ist erforderlich – bitte Ja oder Nein wählen.';
                 $messages[$field.'.in'] = $input->label.' ist erforderlich – bitte Ja oder Nein wählen.';
             } else {
                 $rules[$field] = ['required'];
