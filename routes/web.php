@@ -20,9 +20,3 @@ Route::middleware(['web', 'auth', 'can:see-app-workflows'])->group(function () {
 Route::middleware(['web', 'auth', 'can:manage-app-workflows'])->group(function () {
     Volt::route('apps/workflows/admin', 'apps.workflows.admin.index')->name('apps.workflows.admin.index');
 });
-
-Route::middleware(['web', 'auth', 'can:manage-app-workflows'])->group(function (): void {
-    Volt::route('apps/workflows/admin/background-activities', 'apps.workflows.admin.background-activities')
-        ->name('apps.workflows.admin.background-activities');
-});
-

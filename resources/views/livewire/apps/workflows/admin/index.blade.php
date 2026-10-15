@@ -4,17 +4,18 @@ use function Livewire\Volt\{state, title};
 
 title('Workflows - Admin');
 
-state(['activeTab' => 'hintergrundbild']);
+state(['activeTab' => 'hintergrundbild'])->url(as: 'tab');
 
 ?>
 
 <div>
 <x-intranet-app-workflows::workflows-layout heading="Workflows App" subheading="Admin">
     <flux:tab.group>
-        <flux:tabs wire:model="activeTab">
+        <flux:tabs wire:model.live="activeTab">
             <flux:tab name="hintergrundbild" icon="photo">Hintergrundbild</flux:tab>
             <flux:tab name="einstellungen" icon="cog-6-tooth">Einstellungen</flux:tab>
             <flux:tab name="statistiken" icon="chart-bar">Statistiken</flux:tab>
+            <flux:tab name="hintergrund" icon="clock">Hintergrund</flux:tab>
         </flux:tabs>
 
         <flux:tab.panel name="hintergrundbild">
@@ -62,6 +63,13 @@ state(['activeTab' => 'hintergrundbild']);
                 </flux:card>
             </div>
         </flux:tab.panel>
+    <flux:tab.panel name="hintergrund">
+        @if ($activeTab === 'hintergrund')
+            <div class="min-h-[400px]">
+                @livewire('intranet-app-base::background-activities', ['appIdentifier' => 'workflows'], key('workflows-admin-hintergrund'))
+            </div>
+        @endif
+    </flux:tab.panel>
     </flux:tab.group>
 </x-intranet-app-workflows::workflows-layout>
 </div>
