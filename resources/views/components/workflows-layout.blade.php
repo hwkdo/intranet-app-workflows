@@ -22,6 +22,7 @@
     $defaultNavItems = array_merge($defaultNavItems, [
         ['label' => 'Benachrichtigungen', 'href' => route('apps.workflows.settings.notifications'), 'icon' => 'bell', 'description' => 'Benachrichtigungen dieser App konfigurieren', 'buttonText' => 'Benachrichtigungen öffnen'],
         ['label' => 'App-Info', 'href' => route('apps.workflows.info'), 'icon' => 'information-circle', 'description' => 'Installierte Version und Release-Historie', 'buttonText' => 'App-Info anzeigen'],
+        ['label' => 'Hintergrund', 'href' => route('apps.workflows.admin.background-activities'), 'icon' => 'clock', 'description' => 'Geplante Tasks, Jobs und Versand', 'buttonText' => 'Hintergrund öffnen', 'permission' => 'manage-app-workflows'],
         ['label' => 'Admin', 'href' => route('apps.workflows.admin.index'), 'icon' => 'shield-check', 'description' => 'Administrationsbereich verwalten', 'buttonText' => 'Admin öffnen', 'permission' => 'manage-app-workflows'],
     ]);
 

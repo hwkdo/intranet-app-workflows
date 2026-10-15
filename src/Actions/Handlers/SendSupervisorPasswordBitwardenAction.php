@@ -81,7 +81,7 @@ final class SendSupervisorPasswordBitwardenAction implements WorkflowActionInter
                 $deleteInDays,
             );
 
-            Mail::to($email)->send(new SupervisorPasswordSendMail(
+            Mail::to($email)->queue(new SupervisorPasswordSendMail(
                 employeeName: $employeeName,
                 username: $username,
                 accessUrl: $accessUrl,

@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Hwkdo\IntranetAppWorkflows\Commands;
 
 use App\Models\AzubiEinsatz;
-use Hwkdo\IntranetAppWorkflows\Models\IntranetAppWorkflowsSettings;
+use Hwkdo\IntranetAppBase\Services\BackgroundActivityCatalog;
+use Hwkdo\IntranetAppBase\Services\BackgroundActivityConfigStore;
 use Hwkdo\IntranetAppWorkflows\Services\AzubiRotationStarter;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
@@ -21,7 +22,9 @@ class AzubiRotationCheckCommand extends Command
 
     public function handle(AzubiRotationStarter $starter): int
     {
-        if (! IntranetAppWorkflowsSettings::resolved()->automatische_azubi_rotationen && ! $this->option('force')) {
+        $definition = app(BackgroundActivityCatalog::class)->find('workflows.azubi-rotation');
+
+        if ($definition !== null && ! app(BackgroundActivityConfigStore::class)->isEnabled($definition) && ! $this->option('force')) {
             $this->info('Automatische Azubi-Rotationen sind in den App-Einstellungen deaktiviert.');
 
             return self::SUCCESS;

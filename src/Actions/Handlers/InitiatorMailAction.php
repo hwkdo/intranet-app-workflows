@@ -52,7 +52,7 @@ final class InitiatorMailAction implements WorkflowActionInterface
         }
 
         try {
-            Mail::to($email)->send(new InitiatorCompletedMail($betreff, $inhalt));
+            Mail::to($email)->queue(new InitiatorCompletedMail($betreff, $inhalt));
         } catch (Throwable $e) {
             report($e);
 

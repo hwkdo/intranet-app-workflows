@@ -57,7 +57,7 @@ final class OnboardingMailAction implements WorkflowActionInterface
         }
 
         try {
-            Mail::to($email)->send(new OnboardingDocumentsMail($link));
+            Mail::to($email)->queue(new OnboardingDocumentsMail($link));
         } catch (Throwable $e) {
             report($e);
 

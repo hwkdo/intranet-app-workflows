@@ -25,7 +25,6 @@ use Hwkdo\IntranetAppWorkflows\Contracts\ExchangeQuotaGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\ExchangeSharedMailboxGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\LdapIdentityGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\MailboxForwardingGatewayInterface;
-use Hwkdo\IntranetAppWorkflows\Models\IntranetAppWorkflowsSettings;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenOffboardGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenOnboardGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenSendGateway;
@@ -47,7 +46,6 @@ use Hwkdo\IntranetAppWorkflows\Services\Exchange\NullMailboxForwardingGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Ldap\HostLdapIdentityGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Ldap\NullLdapIdentityGateway;
 use Hwkdo\IntranetAppWorkflows\Services\WorkflowOrchestrator;
-use Illuminate\Console\Scheduling\Schedule;
 use Livewire\Volt\Volt;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -187,12 +185,5 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         $this->loadJsonTranslationsFrom(__DIR__.'/../lang');
 
-        $this->app->resolving(Schedule::class, function (): void {
-            $schedule = $this->app->make(Schedule::class);
-            $schedule->command('workflows:process-waiting-actions')->everyFifteenMinutes();
-            $schedule->command('workflows:azubi-rotation-check')
-                ->dailyAt('01:10')
-                ->when(fn (): bool => IntranetAppWorkflowsSettings::resolved()->automatische_azubi_rotationen);
-        });
     }
 }

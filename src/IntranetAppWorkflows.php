@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Hwkdo\IntranetAppWorkflows;
 
+use Hwkdo\IntranetAppBase\Interfaces\ProvidesBackgroundActivitiesInterface;
+use Hwkdo\IntranetAppWorkflows\Background\WorkflowsBackgroundActivities;
 use Hwkdo\IntranetAppBase\Data\ManualDefinition;
 use Hwkdo\IntranetAppBase\Data\NotificationTypeDefinition;
 use Hwkdo\IntranetAppBase\Interfaces\IntranetAppInterface;
@@ -16,7 +18,7 @@ use Hwkdo\IntranetAppWorkflows\Data\UserSettings;
 use Hwkdo\IntranetAppWorkflows\Tasks\AssigneePendingTaskProvider;
 use Illuminate\Support\Collection;
 
-class IntranetAppWorkflows implements IntranetAppInterface, ProvidesManualsInterface, ProvidesNotificationsInterface, ProvidesTasksInterface
+class IntranetAppWorkflows implements IntranetAppInterface, ProvidesBackgroundActivitiesInterface, ProvidesManualsInterface, ProvidesNotificationsInterface, ProvidesTasksInterface
 {
     public static function app_name(): string
     {
@@ -103,4 +105,11 @@ class IntranetAppWorkflows implements IntranetAppInterface, ProvidesManualsInter
     {
         return [];
     }
+
+    public static function backgroundActivities(): array
+    {
+        return WorkflowsBackgroundActivities::definitions();
+    }
+
+
 }
