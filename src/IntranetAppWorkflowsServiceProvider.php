@@ -25,6 +25,7 @@ use Hwkdo\IntranetAppWorkflows\Contracts\ExchangeQuotaGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\ExchangeSharedMailboxGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\LdapIdentityGatewayInterface;
 use Hwkdo\IntranetAppWorkflows\Contracts\MailboxForwardingGatewayInterface;
+use Hwkdo\IntranetAppWorkflows\Contracts\OnboardingSignatureDocumentSource;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenOffboardGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenOnboardGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Bitwarden\HostBitwardenSendGateway;
@@ -45,6 +46,7 @@ use Hwkdo\IntranetAppWorkflows\Services\Exchange\NullExchangeSharedMailboxGatewa
 use Hwkdo\IntranetAppWorkflows\Services\Exchange\NullMailboxForwardingGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Ldap\HostLdapIdentityGateway;
 use Hwkdo\IntranetAppWorkflows\Services\Ldap\NullLdapIdentityGateway;
+use Hwkdo\IntranetAppWorkflows\Services\NullOnboardingSignatureDocumentSource;
 use Hwkdo\IntranetAppWorkflows\Services\WorkflowOrchestrator;
 use Livewire\Volt\Volt;
 use Spatie\LaravelPackageTools\Package;
@@ -77,6 +79,8 @@ class IntranetAppWorkflowsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(WorkflowOrchestrator::class);
+
+        $this->app->singleton(OnboardingSignatureDocumentSource::class, NullOnboardingSignatureDocumentSource::class);
 
         $this->app->singleton(LdapIdentityGatewayInterface::class, function (): LdapIdentityGatewayInterface {
             if (class_exists(LdapRecordUserService::class)) {

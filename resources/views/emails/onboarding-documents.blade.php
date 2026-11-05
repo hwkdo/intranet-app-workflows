@@ -14,5 +14,13 @@ Personalabteilung
 Hier geht's direkt zu den Dokumenten
 </x-mail::button>
 
+@if ($signatureDocuments !== [])
+Die Kenntnisnahme folgender Dokumente muss per Unterschrift bestätigt werden:
+
+@foreach ($signatureDocuments as $signatureDocument)
+- [{{ $signatureDocument['title'] }}]({{ $signatureDocument['url'] }})
+@endforeach
+@endif
+
 Dies ist eine automatisch generierte Mail (Intranet Workflows).
 </x-mail::message>

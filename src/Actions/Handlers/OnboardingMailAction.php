@@ -7,6 +7,7 @@ namespace Hwkdo\IntranetAppWorkflows\Actions\Handlers;
 use Hwkdo\IntranetAppWorkflows\Actions\ActionContext;
 use Hwkdo\IntranetAppWorkflows\Actions\ActionResult;
 use Hwkdo\IntranetAppWorkflows\Actions\Contracts\WorkflowActionInterface;
+use Hwkdo\IntranetAppWorkflows\Contracts\OnboardingSignatureDocumentSource;
 use Hwkdo\IntranetAppWorkflows\Mail\OnboardingDocumentsMail;
 use Hwkdo\IntranetAppWorkflows\Support\OnboardingLinkBuilder;
 use Hwkdo\IntranetAppWorkflows\Support\PhaseDGuard;
@@ -44,20 +45,30 @@ final class OnboardingMailAction implements WorkflowActionInterface
 
         try {
             $link = OnboardingLinkBuilder::forUser($user);
+            $signatureDocuments = app(OnboardingSignatureDocumentSource::class)->linksFor($user);
         } catch (Throwable $e) {
             return ActionResult::failed($e->getMessage(), retryable: false);
         }
 
+        $messages = ["Onboarding-Link: {$link}"];
+        if ($signatureDocuments !== []) {
+            $messages[] = count($signatureDocuments).' Formwerk-Dokumente verlinkt';
+        }
+
         if ($dry = PhaseDGuard::assertNotDryRunOrMessage(
             actionLabel: "Onboarding-Mail an {$email}",
-            output: ['onboarding_email' => $email, 'onboarding_link' => $link],
-            messages: ["Onboarding-Link: {$link}"],
+            output: [
+                'onboarding_email' => $email,
+                'onboarding_link' => $link,
+                'signature_documents' => $signatureDocuments,
+            ],
+            messages: $messages,
         )) {
             return $dry;
         }
 
         try {
-            Mail::to($email)->queue(new OnboardingDocumentsMail($link));
+            Mail::to($email)->queue(new OnboardingDocumentsMail($link, $signatureDocuments));
         } catch (Throwable $e) {
             report($e);
 
@@ -69,6 +80,7 @@ final class OnboardingMailAction implements WorkflowActionInterface
             output: [
                 'onboarding_email' => $email,
                 'onboarding_link' => $link,
+                'signature_documents' => $signatureDocuments,
             ],
         );
     }

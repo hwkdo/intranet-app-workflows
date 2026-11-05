@@ -20,8 +20,12 @@ class OnboardingDocumentsMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
+    /**
+     * @param  list<array{title: string, url: string}>  $signatureDocuments
+     */
     public function __construct(
         public readonly string $link,
+        public readonly array $signatureDocuments = [],
     ) {
         $this->afterCommit();
     }
@@ -53,6 +57,7 @@ class OnboardingDocumentsMail extends Mailable implements ShouldQueue
             markdown: 'intranet-app-workflows::emails.onboarding-documents',
             with: [
                 'link' => $this->link,
+                'signatureDocuments' => $this->signatureDocuments,
             ],
         );
     }
